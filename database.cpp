@@ -215,6 +215,7 @@ int main(int, char**)
 
 
 
+
     // Main loop
 #ifdef __EMSCRIPTEN__
     // For an Emscripten build we are disabling file-system access, so let's not attempt to do a fopen() of the imgui.ini file.
@@ -258,7 +259,7 @@ int main(int, char**)
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 //            //ImGuiWindowFlags_NoTitleBar
-            ImGui::Begin("", 0);
+            ImGui::Begin("##a", 0);
             if (first_use) {
                 ImGui::SetCursorPos(ImVec2((ImGui::GetWindowSize().x - (my_image_width / 5)) * 0.5f,(ImGui::GetWindowSize().y - (my_image_height / 5)) * 0.5f));
                 if (ImGui::ImageButton((void *) (intptr_t) my_image_texture,ImVec2(my_image_width / 5, my_image_height / 5))) {
@@ -305,7 +306,7 @@ int main(int, char**)
                     }
                     ImGui::EndPopup();
                 }
-
+                ImGui::End();
             } else {
 //            //TODO: click join opens up a pop up to enter code and passwords to get into a school
                 static ImVector<string> active_tabs; //TODO: change to ImVector<Course> after merging files
