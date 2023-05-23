@@ -1,4 +1,6 @@
 #pragma once
+
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -8,7 +10,7 @@
 #include "Person.hpp"
 #include "Student.hpp"
 #include "Teacher.hpp"
-using std::unordered_map, std::string;
+using std::unordered_map, std::string, std::stringstream;
 
 class SchoolDB {
    private:
@@ -27,7 +29,7 @@ class SchoolDB {
     void addTeacher(Teacher teacher);
     void addCourse(Course course);
 
-    void log();
+    string log(bool update = false);
 
     void reset();
     void save();
