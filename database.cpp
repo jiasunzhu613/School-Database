@@ -446,7 +446,18 @@ int main(int, char**) {
                     }
                     if (ImGui::BeginPopupModal("CREATE COURSE", NULL)) {
                         ImGui::Text("COURSE ID");
-                        static char buf1[64] = ""; ImGui::InputText("##a", buf1, 64);// Display some text (you can use a format strings too)
+                        struct TextFilters
+                        {
+                            // Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i'
+                            static int FilterImGuiLetters(ImGuiInputTextCallbackData* data)
+                            {
+                                if (data->EventChar < 256 && strchr("QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234", (char)data->EventChar))
+                                    return 0;
+                                return 1;
+                            }
+                        };
+
+                        static char buf1[64] = ""; ImGui::InputText("##a", buf1, 64, ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CallbackCharFilter, TextFilters::FilterImGuiLetters);// Display some text (you can use a format strings too)
                         // TODO: implement keyboard "enter" key detection and allow enter to use the button
                         // TODO: check if a class course code is valid
 //                        cout << buf1 << endl;
