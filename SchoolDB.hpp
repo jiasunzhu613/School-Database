@@ -28,6 +28,8 @@ class SchoolDB {
     void addStudent(Student student);
     void addTeacher(Teacher teacher);
     void addCourse(Course course);
+    void addCourse(Teacher* teacher, string courseCode, int section);
+    void addCourse(string teacher, string courseCode, int section);
 
     string log(bool update = false);
 
