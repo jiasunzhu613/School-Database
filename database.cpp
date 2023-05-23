@@ -3,8 +3,11 @@
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 #include <string>
+#include <regex>
 #include <unordered_set>
 #include <fmt/core.h>
+#include <vector>
+#include <algorithm>
 #include "SchoolDB.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -74,27 +77,6 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
-bool validateCourseCode(string courseCode){
-    // ICS4U-01
-    // MPM4UE-01
-    // auto add -xy after where x and y are numbers
-    // 3 letters, check combinations of number + letter
-    // 6 or 8 characters
-
-    for (int i = 0; i < 3; i++){
-        if (!('A' <= courseCode[i] <= 'Z'))
-            return false;
-    }
-
-    if (!(courseCode[5] == '-'))
-        return false;
-
-    for (int i = 6; i < 8; i++){
-        if (!('0' <= courseCode[i] <= '9'))
-            return false;
-    }
-}
-
 
 // Main code
 int main(int, char**)
@@ -125,23 +107,6 @@ int main(int, char**)
     for (auto course : NB.getCourses())
         cout << course->getFullCourseCode() << endl;
     db.save();
-
-    ImVector<string> vec;
-    vec.push_back("ICS4U");
-    vec.push_back("MPM4UE");
-    vec.push_back("5");
-    vec.push_back("1");
-    for (string i : vec)
-        cout << i << endl;
-    cout << endl;
-    vec.erase(vec.Data + 1);
-    for (string i : vec)
-        cout << i << endl;
-    cout << endl;
-    vec.erase(vec.Data + 2);
-    vec.erase(vec.Data + 1);
-    for (string i : vec)
-        cout << i << endl;
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
         return 1;
@@ -212,6 +177,7 @@ int main(int, char**)
 //    bool show_demo_window = true;
 //    bool show_another_window = false;
 //    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    std::regex course_match{"([A-Z]{3}([1-2]O|[1-4]C|[1-4]M|[1-4]UE|[1-4]U))"};
     ImVec4 table_header_color = ImVec4(0.48f, 0.31f, 0.82f, 1.00f);
     int pwflags1 = ImGuiInputTextFlags_Password;
     bool showPW1 = false;
@@ -390,13 +356,22 @@ int main(int, char**)
                         static char buf1[64] = ""; ImGui::InputText("##a", buf1, 64);// Display some text (you can use a format strings too)
                         // TODO: implement keyboard "enter" key detection and allow enter to use the button
                         // TODO: check if a class course code is valid
-                        for (string i : active_tabs){
+//                        cout << buf1 << endl;
+                        if (!std::regex_match(buf1, course_match)) {
+                            ImGui::Text("Invalid course code");
+                        }else{
+                            if (ImGui::Button("CREATE")) {
+                                int count = 1;
+                                for (auto [courseCode, course] : db.getCourses()) {
+                                    if (buf1 == courseCode.substr(0, courseCode.find('-')))
+                                        count += 1;
+                                }
+                                string output = buf1;
+                                active_tabs.push_back(fmt::format("{}-{:02}", output, count).c_str());
+                                ImGui::CloseCurrentPopup();
+                            }
+                        }
 
-                        }
-                        if (ImGui::Button("CREATE")) {
-                            active_tabs.push_back(buf1);
-                            ImGui::CloseCurrentPopup();
-                        }
                         ImGui::EndPopup();
                     }
 //                    if (ImGui::TabItemButton("JOIN", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip))
