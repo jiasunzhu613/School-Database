@@ -10,6 +10,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 #include "SchoolDB.hpp"
 #include "imgui.h"
@@ -19,7 +20,7 @@
 #include "stb_image.h"
 
 using std::cout, std::cerr, std::cin, std::endl, std::unordered_set,
-    std::to_string, std::string;
+    std::to_string, std::string, std::vector;
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
@@ -521,6 +522,7 @@ int main(int, char**) {
                                 }
                                 ImGui::EndTable();
                             }
+
                             ImGui::EndTabItem();
                         }
 

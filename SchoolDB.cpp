@@ -22,6 +22,14 @@ void SchoolDB::addCourse(Course course) {
     courses[course.getFullCourseCode()] = course;
 }
 
+void SchoolDB::addCourse(Teacher* teacher, string courseCode, int section) {
+    courses[courseCode] = Course{teacher, courseCode, section};
+}
+
+void SchoolDB::addCourse(string teacher, string courseCode, int section) {
+    courses[courseCode] = Course{&teachers[teacher], courseCode, section};
+}
+
 string SchoolDB::log(bool update) {
     static stringstream ss{};
     if (update) {
