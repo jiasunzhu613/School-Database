@@ -16,7 +16,7 @@
 using std::string, std::vector, std::unordered_set, std::unordered_map,
     std::cout, std::endl, std::ifstream, std::ofstream;
 
-const string FILE_LOCATION = "school_db.json";
+const string FILE_LOCATION = "../school_db.json";
 
 class SchoolDB;
 class Student;
