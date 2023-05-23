@@ -6,7 +6,6 @@
 // https://github.com/ocornut/imgui/tree/master/docs
 #include <fmt/core.h>
 #include <stdio.h>
-
 #include <iostream>
 #include <string>
 #include <regex>
