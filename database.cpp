@@ -74,6 +74,28 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
+bool validateCourseCode(string courseCode){
+    // ICS4U-01
+    // MPM4UE-01
+    // auto add -xy after where x and y are numbers
+    // 3 letters, check combinations of number + letter
+    // 6 or 8 characters
+
+    for (int i = 0; i < 3; i++){
+        if (!('A' <= courseCode[i] <= 'Z'))
+            return false;
+    }
+
+    if (!(courseCode[5] == '-'))
+        return false;
+
+    for (int i = 6; i < 8; i++){
+        if (!('0' <= courseCode[i] <= '9'))
+            return false;
+    }
+}
+
+
 // Main code
 int main(int, char**)
 {
@@ -214,8 +236,6 @@ int main(int, char**)
     IM_ASSERT(ret2);
 
 
-
-
     // Main loop
 #ifdef __EMSCRIPTEN__
     // For an Emscripten build we are disabling file-system access, so let's not attempt to do a fopen() of the imgui.ini file.
@@ -311,6 +331,7 @@ int main(int, char**)
 //            //TODO: click join opens up a pop up to enter code and passwords to get into a school
                 static ImVector<string> active_tabs; //TODO: change to ImVector<Course> after merging files
                 static int next_tab_id = 0;
+                //create initial tabs
                 if (next_tab_id == 0){
                     for (auto [courseCode, course] : db.getCourses()) {
                         active_tabs.push_back(courseCode);
@@ -367,6 +388,11 @@ int main(int, char**)
                     {
                         ImGui::Text("COURSE ID");
                         static char buf1[64] = ""; ImGui::InputText("##a", buf1, 64);// Display some text (you can use a format strings too)
+                        // TODO: implement keyboard "enter" key detection and allow enter to use the button
+                        // TODO: check if a class course code is valid
+                        for (string i : active_tabs){
+
+                        }
                         if (ImGui::Button("CREATE")) {
                             active_tabs.push_back(buf1);
                             ImGui::CloseCurrentPopup();
