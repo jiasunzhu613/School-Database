@@ -1,0 +1,80 @@
+Package: vcpkg-cmake-config
+Version: 2022-02-06
+Port-Version: 1
+Architecture: x64-osx
+Multi-Arch: same
+Abi: d344a8345c7e5ceb2a045ef8f7826e6c3f3503a679ddfa7b1a3509c4cd80d069
+Status: install ok installed
+
+Package: vcpkg-cmake
+Version: 2022-12-22
+Architecture: x64-osx
+Multi-Arch: same
+Abi: 2e47084d55aabeaed9522695702516c82eaae40bb2231afa9ad380477030715d
+Status: install ok installed
+
+Package: egl-registry
+Version: 2022-09-20
+Architecture: x64-osx
+Multi-Arch: same
+Abi: 3b8df637e07b4ce26ee3b4750c451ee9eb749cdfe5f3c4ef1f62651f63f51b33
+Description: the EGL API and Extension Registry
+Status: install ok installed
+
+Package: opengl-registry
+Version: 2022-09-29
+Port-Version: 1
+Depends: egl-registry
+Architecture: x64-osx
+Multi-Arch: same
+Abi: 480c806e9bfb2ecfb71cf402f3ca056012e448ae50d135508ece7befa51f04ab
+Description: the API and Extension registries for the OpenGL family APIs
+Status: install ok installed
+
+Package: glad
+Version: 0.1.36
+Depends: egl-registry, opengl-registry, vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-osx
+Multi-Arch: same
+Abi: 6a3e4584a56f72e7c5527ec3cd24ef1817d2c6a5cc579bb98666679d81eec888
+Description: Multi-Language Vulkan/GL/GLES/EGL/GLX/WGL Loader-Generator based on the official specs.
+Default-Features: loader
+Status: install ok installed
+
+Package: glad
+Feature: loader
+Architecture: x64-osx
+Multi-Arch: same
+Description: Generate loader logic.
+Status: install ok installed
+
+Package: glfw3
+Version: 3.3.8
+Port-Version: 2
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-osx
+Multi-Arch: same
+Abi: 969090c4db1ddf8c27707ceee9b5eb500c950706d68f1e794569b0fa9fddadb2
+Description: GLFW is a free, Open Source, multi-platform library for OpenGL, OpenGL ES and Vulkan application development. It provides a simple, platform-independent API for creating windows, contexts and surfaces, reading input, handling events, etc.
+Status: install ok installed
+
+Package: imgui
+Version: 1.89.4
+Port-Version: 1
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-osx
+Multi-Arch: same
+Abi: d753b7437d316fc24e32562d43271773ee4981bde6edae52971fec834ae8357d
+Description: Bloat-free Immediate Mode Graphical User interface for C++ with minimal dependencies.
+Status: install ok installed
+
+Package: opengl
+Version: 2022-12-04
+Port-Version: 3
+Depends: opengl-registry
+Architecture: x64-osx
+Multi-Arch: same
+Abi: de9bae39c8f39d84941937446f87157b5b6bdfc57c2dfbd6005605babc17965a
+Description: Open Graphics Library (OpenGL)[3][4][5] is a cross-language, cross-platform application programming interface (API) for rendering 2D and 3D vector graphics.
+Status: install ok installed
+
