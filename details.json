@@ -1,0 +1,20 @@
+{
+	"DoB" : "9th December 2023",
+	"Grade" : 1,
+	"HELLO!" : "HI",
+	"Name" : "Your father",
+	"Students" : 
+	{
+		"Bobby" : 
+		{
+			"Address" : "123 the bomb street",
+			"Student ID" : "S29839028"
+		},
+		"your mom" : 
+		{
+			"Address" : "123 Sesame Street",
+			"StudentID" : "S13978203"
+		}
+	},
+	"Subject" : "French"
+}
