@@ -19,6 +19,8 @@ class Teacher : public Person {
     Teacher(string first, string last);
     Teacher(string f, string l, string t, string id);
     Teacher(string f, string l, string a, string t, string id);
+    Teacher(const Teacher&);
+    Teacher& operator=(const Teacher&);
     void setTeachables(string t);
     string getTeachables();
     void setEmployeeId(string id);
@@ -28,4 +30,5 @@ class Teacher : public Person {
     string toString();
     const unordered_set<Course*>& getCourses();
     void addToCourse(Course* course);
+    void setCourses(unordered_set<Course*>);
 };
