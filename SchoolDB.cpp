@@ -5,9 +5,9 @@ SchoolDB::SchoolDB() {
     // jsonDB.load(this);
 }
 
-unordered_map<string, Teacher> SchoolDB::getTeachers() { return teachers; }
-unordered_map<string, Student> SchoolDB::getStudents() { return students; }
-unordered_map<string, Course> SchoolDB::getCourses() { return courses; }
+unordered_map<string, Teacher>& SchoolDB::getTeachers() { return teachers; }
+unordered_map<string, Student>& SchoolDB::getStudents() { return students; }
+unordered_map<string, Course>& SchoolDB::getCourses() { return courses; }
 
 void SchoolDB::reset() { jsonDB.load(this); }
 void SchoolDB::save() { jsonDB.save(this); }
