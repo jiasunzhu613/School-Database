@@ -37,6 +37,8 @@ using std::cout, std::cerr, std::cin, std::endl, std::unordered_set,
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
 #endif
 
+SchoolDB db{};
+
 // Simple helper function to load an image into a OpenGL texture with common
 // settings
 bool LoadTextureFromFile(const char* filename, GLuint* out_texture,
@@ -81,9 +83,52 @@ static void glfw_error_callback(int error, const char* description) {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
+void log() {
+    ImGui::Begin("Log");
+    ImGui::Text(db.log(ImGui::Button("Update Logging?")).c_str());
+    ImGui::End();
+}
+
+void addingStudentToCourse(string courseCode, bool& isCreatingStudent) {
+    ImGui::OpenPopup("Adding Student to Course");
+    if (ImGui::BeginPopupModal("Adding Student to Course",
+                               &isCreatingStudent)) {
+        const int buffSize = 11;
+        static char studentID[buffSize];
+        ImGui::InputText("Student ID", studentID, buffSize);
+
+        if (db.getStudents().contains(string{studentID})) {
+            if (ImGui::Button("Submit")) {
+                Student& studentBeingAdded =
+                    db.getStudents().at(string{studentID});
+
+                db.getCourses()[courseCode].addStudentToClass(
+                    studentBeingAdded);
+
+                unordered_set x = db.getCourses().at(courseCode).getStudents();
+                for (Student* student :
+                     db.getCourses().at(courseCode).getStudents()) {
+                    cout << student->getFirstName() << " "
+                         << student->getLastName() << endl;
+                    cout << student->getStudentId() << endl;
+                }
+                isCreatingStudent = false;
+                for (char& c : studentID) c = '\0';
+            }
+        } else {
+            ImGui::Text("Student with this ID doesn't exist");
+            if (ImGui::Button("Quit?")) {
+                isCreatingStudent = false;
+                for (char& c : studentID) c = ' ';
+            }
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
 // Main code
 int main(int, char**) {
-    SchoolDB db{};
     Teacher BenHuddy{"Benjamin", "Hudson", "ICS4U", "C69696"};
     Teacher Hughes{"Andy", "Hughes", "MPM4UE", "C42042"};
 
@@ -220,7 +265,7 @@ int main(int, char**) {
     bool ret2 = LoadTextureFromFile("../Images/join.png", &my_image_texture2,
                                     &my_image_width2, &my_image_height2);
     IM_ASSERT(ret2);
-
+    bool isAddingStudentToCourse = false;
     // Main loop
 #ifdef __EMSCRIPTEN__
     // For an Emscripten build we are disabling file-system access, so let's not
@@ -261,12 +306,13 @@ int main(int, char**) {
         else
             pwflags3 = 0;
 
+        log();
         if (show_logged_in_window) {
             ImGui::SetNextWindowSize(ImVec2(1280, 720));
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
                                     ImVec2(0.5f, 0.5f));
-            //ImGuiWindowFlags_NoTitleBar
+            // ImGuiWindowFlags_NoTitleBar
             ImGui::Begin("##a", 0);
             if (first_use) {
                 ImGui::SetCursorPos(ImVec2(
@@ -284,8 +330,7 @@ int main(int, char**) {
                 if (ImGui::BeginPopupModal("CREATE SCHOOL", &create_school_window)) {
                     ImGui::Text("SCHOOL ID or SCHOOL NAME");
                     static char buf3[64] = "";
-                    ImGui::InputText("##a", buf3,
-                                     64);
+                    ImGui::InputText("##a", buf3, 64);
                     ImGui::Text("Password");
                     static char password2[64] = "";
                     ImGui::InputText("##b", password2, IM_ARRAYSIZE(password2),
@@ -324,8 +369,7 @@ int main(int, char**) {
                 if (ImGui::BeginPopupModal("JOIN SCHOOL", &join_school_window)) {
                     ImGui::Text("SCHOOL ID or SCHOOL NAME");
                     static char buf3[64] = "";
-                    ImGui::InputText("##a", buf3,
-                                     64);
+                    ImGui::InputText("##a", buf3, 64);
                     ImGui::Text("Password");
                     static char password2[64] = "";
                     ImGui::InputText("##b", password2, IM_ARRAYSIZE(password2),
@@ -402,7 +446,7 @@ int main(int, char**) {
                         // TODO: implement keyboard "enter" key detection and allow enter to use the button (additional feature)
                         if (!std::regex_match(buf1, course_match)) {
                             ImGui::Text("Invalid course code");
-                        }else{
+                        } else {
                             if (ImGui::Button("CREATE")) {
                                 //TODO: load newly create classes into .json file
                                 int count = 1;
@@ -490,6 +534,14 @@ int main(int, char**) {
                                     ImGui::TableNextColumn();
                                     ImGui::Text(student->getAddress().c_str());
                                 }
+                                ImGui::TableNextColumn();
+                                if (ImGui::Button("Add Student to Course?"))
+                                    isAddingStudentToCourse = true;
+                                if (isAddingStudentToCourse)
+                                    addingStudentToCourse(
+                                        active_tabs[n],
+                                        isAddingStudentToCourse);
+
                                 ImGui::EndTable();
                             }
 
@@ -589,6 +641,10 @@ int main(int, char**) {
                 ImGui::Text(
                     "YOUR ACCOUNT HAS BEEN SUCCESSFULLY CREATED. \nLOG IN "
                     "THROUGH THE LOG IN WINDOW!");
+                if (ImGui::Button("Close")) {
+                    ImGui::CloseCurrentPopup();
+                    show_log_in_window = true;
+                }
                 ImGui::EndPopup();
             }
             if (!account_creation_success_window)
