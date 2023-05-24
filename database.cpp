@@ -1,18 +1,10 @@
-// Dear ImGui: standalone example application for GLFW + OpenGL 3, using
-// programmable pipeline (GLFW is a cross-platform general purpose library for
-// handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation,
-// etc.) If you are new to Dear ImGui, read documentation from the docs/ folder
-// + read the top of imgui.cpp. Read online:
-// https://github.com/ocornut/imgui/tree/master/docs
 #include <fmt/core.h>
 #include <stdio.h>
 #include <iostream>
 #include <string>
 #include <regex>
 #include <unordered_set>
-#include <fmt/core.h>
 #include <vector>
-#include <algorithm>
 #include "SchoolDB.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -268,18 +260,12 @@ int main(int, char**) {
         else
             pwflags3 = 0;
 
-        // 1. Show the big demo window (Most of the sample code is in
-        // ImGui::ShowDemoWindow()! You can browse its code to learn more about
-        // Dear ImGui!).
-        //        if (show_demo_window)
-        //            ImGui::ShowDemoWindow(&show_demo_window);
-
         if (show_logged_in_window) {
             ImGui::SetNextWindowSize(ImVec2(1280, 720));
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
                                     ImVec2(0.5f, 0.5f));
-            //            //ImGuiWindowFlags_NoTitleBar
+            //ImGuiWindowFlags_NoTitleBar
             ImGui::Begin("##a", 0);
             if (first_use) {
                 ImGui::SetCursorPos(ImVec2(
@@ -297,8 +283,7 @@ int main(int, char**) {
                     ImGui::Text("SCHOOL ID or SCHOOL NAME");
                     static char buf3[64] = "";
                     ImGui::InputText("##a", buf3,
-                                     64);  // Display some text (you can use a
-                                           // format strings too)
+                                     64);
                     ImGui::Text("Password");
                     static char password2[64] = "";
                     ImGui::InputText("##b", password2, IM_ARRAYSIZE(password2),
@@ -317,8 +302,7 @@ int main(int, char**) {
                     }
                     ImGui::EndPopup();
                 }
-                // TODO: click "+" opens up new window or popup to create and
-                // configure a new school
+                // TODO: click "+" opens up new window or popup to create and configure a new school
                 ImGui::SetCursorPos(
                     ImVec2((ImGui::GetWindowSize().x - (my_image_width2 / 15) -
                             (1.5 * my_image_width / 5)) *
@@ -338,14 +322,14 @@ int main(int, char**) {
                     ImGui::Text("SCHOOL ID or SCHOOL NAME");
                     static char buf3[64] = "";
                     ImGui::InputText("##a", buf3,
-                                     64);  // Display some text (you can use a
-                                           // format strings too)
+                                     64);
                     ImGui::Text("Password");
                     static char password2[64] = "";
                     ImGui::InputText("##b", password2, IM_ARRAYSIZE(password2),
                                      pwflags2);
                     ImGui::SameLine();
                     ImGui::Checkbox("Show Password", &showPW2);
+                    //TODO: click join opens up a pop up to enter code and passwords to get into a school
                     if (ImGui::Button("JOIN")) {
                         ImGui::CloseCurrentPopup();
                         first_use = false;
@@ -354,11 +338,7 @@ int main(int, char**) {
                 }
                 ImGui::End();
             } else {
-                //            //TODO: click join opens up a pop up to enter code
-                //            and passwords to get into a school
-                static vector<std::string>
-                    active_tabs{};  // TODO: change to ImVector<Course> after
-                                    // merging files
+                static vector<std::string> active_tabs{};
                 static int next_tab_id = 0;
                 if (next_tab_id == 0) {
                     for (auto [courseCode, course] : db.getCourses()) {
@@ -366,10 +346,6 @@ int main(int, char**) {
                         next_tab_id++;
                     }
                 }
-                //                if (next_tab_id == 0) // Initialize with some
-                //                default tabs
-                //                    for (int i = 0; i < 1; i++)
-                //                        active_tabs.push_back(to_string(next_tab_id++));
 
                 // TabItemButton() and Leading/Trailing flags are distinct
                 // features which we will demo together. (It is possible to
@@ -389,40 +365,8 @@ int main(int, char**) {
                     ImGuiTabBarFlags_Reorderable |
                     ImGuiTabBarFlags_FittingPolicyResizeDown |
                     ImGuiTabBarFlags_TabListPopupButton;
-                //            ImGui::CheckboxFlags("ImGuiTabBarFlags_TabListPopupButton",
-                //            &tab_bar_flags,
-                //            ImGuiTabBarFlags_TabListPopupButton); if
-                //            (ImGui::CheckboxFlags("ImGuiTabBarFlags_FittingPolicyResizeDown",
-                //            &tab_bar_flags,
-                //            ImGuiTabBarFlags_FittingPolicyResizeDown))
-                //                tab_bar_flags &=
-                //                ~(ImGuiTabBarFlags_FittingPolicyMask_ ^
-                //                ImGuiTabBarFlags_FittingPolicyResizeDown);
-                //            if
-                //            (ImGui::CheckboxFlags("ImGuiTabBarFlags_FittingPolicyScroll",
-                //            &tab_bar_flags,
-                //            ImGuiTabBarFlags_FittingPolicyScroll))
-                //                tab_bar_flags &=
-                //                ~(ImGuiTabBarFlags_FittingPolicyMask_ ^
-                //                ImGuiTabBarFlags_FittingPolicyScroll);
 
-                //                for (string i : active_tabs)
-                //                    cout << i << endl;
-                //                cout << endl;
                 if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
-                    // Demo a Leading TabItemButton(): click the "?" button to
-                    // open a menu
-                    //                if (show_leading_button)
-                    //                    if (ImGui::TabItemButton("?",
-                    //                    ImGuiTabItemFlags_Leading |
-                    //                    ImGuiTabItemFlags_NoTooltip))
-                    //                        ImGui::OpenPopup("MyHelpMenu");
-                    //                if (ImGui::BeginPopup("MyHelpMenu"))
-                    //                {
-                    //                    ImGui::Selectable("Hello!");
-                    //                    ImGui::EndPopup();
-                    //                }
-
                     // Demo Trailing Tabs: click the "+" button to add a new tab
                     // (in your app you may want to use a font icon instead of
                     // the "+") Note that we submit it before the regular tabs,
@@ -435,17 +379,10 @@ int main(int, char**) {
                         ImGui::SetNextWindowSize(ImVec2(400, 200));
                         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
                                                 ImVec2(0.5f, 0.5f));
-                        //                        static char buf1[64] = "";
-                        //                        ImGui::InputText("##a", buf1,
-                        //                        64);// Display some text (you
-                        //                        can use a format strings too)
-                        //                        active_tabs.push_back(to_string(next_tab_id++));
-                        //                        // Add new tab (action that h)
-                        // TODO: change to push back courses and asking for
-                        // information on courses after merging files
                     }
                     if (ImGui::BeginPopupModal("CREATE COURSE", NULL)) {
                         ImGui::Text("COURSE ID");
+                        // Input filter
                         struct TextFilters
                         {
                             // Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i'
@@ -459,8 +396,6 @@ int main(int, char**) {
 
                         static char buf1[64] = ""; ImGui::InputText("##a", buf1, 64, ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CallbackCharFilter, TextFilters::FilterImGuiLetters);// Display some text (you can use a format strings too)
                         // TODO: implement keyboard "enter" key detection and allow enter to use the button
-                        // TODO: check if a class course code is valid
-//                        cout << buf1 << endl;
                         if (!std::regex_match(buf1, course_match)) {
                             ImGui::Text("Invalid course code");
                         }else{
@@ -478,11 +413,6 @@ int main(int, char**) {
 
                         ImGui::EndPopup();
                     }
-                    //                    if (ImGui::TabItemButton("JOIN",
-                    //                    ImGuiTabItemFlags_Trailing |
-                    //                    ImGuiTabItemFlags_NoTooltip))
-                    //                        active_tabs.push_back(next_tab_id++);
-                    //                        // Add new tab
 
                     // Submit our regular tabs
                     for (int n = 0; n < active_tabs.size();) {
@@ -550,14 +480,9 @@ int main(int, char**) {
                             ImGui::EndTabItem();
                         }
 
-                        // these if's control the opening and closing of new
-                        // tabs
+                        // these if's control the opening and closing of new tabs
                         if (!open) {
                             active_tabs.erase(active_tabs.begin() + n);
-                            //                            for (string i :
-                            //                            active_tabs)
-                            //                                cout << i << endl;
-                            //                            cout << endl;
                         } else
                             n++;
                     }
@@ -666,8 +591,6 @@ int main(int, char**) {
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
-        //        glClearColor(clear_color.x * clear_color.w, clear_color.y *
-        //        clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
