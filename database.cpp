@@ -194,6 +194,7 @@ int main(int, char**) {
 //    bool show_demo_window = true;
 //    bool show_another_window = false;
 //    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    string logged_in_employee;
     std::regex course_match{"([A-Z]{3}([1-2]O|[1-4]C|[1-4]M|[1-4]UE|[1-4]U))"};
     ImVec4 table_header_color = ImVec4(0.48f, 0.31f, 0.82f, 1.00f);
     int pwflags1 = ImGuiInputTextFlags_Password;
@@ -279,7 +280,8 @@ int main(int, char**) {
                     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
                                             ImVec2(0.5f, 0.5f));
                 }
-                if (ImGui::BeginPopupModal("CREATE SCHOOL", NULL)) {
+                bool create_school_window = true;
+                if (ImGui::BeginPopupModal("CREATE SCHOOL", &create_school_window)) {
                     ImGui::Text("SCHOOL ID or SCHOOL NAME");
                     static char buf3[64] = "";
                     ImGui::InputText("##a", buf3,
@@ -318,7 +320,8 @@ int main(int, char**) {
                     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
                                             ImVec2(0.5f, 0.5f));
                 }
-                if (ImGui::BeginPopupModal("JOIN SCHOOL", NULL)) {
+                bool join_school_window = true;
+                if (ImGui::BeginPopupModal("JOIN SCHOOL", &join_school_window)) {
                     ImGui::Text("SCHOOL ID or SCHOOL NAME");
                     static char buf3[64] = "";
                     ImGui::InputText("##a", buf3,
@@ -380,7 +383,8 @@ int main(int, char**) {
                         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
                                                 ImVec2(0.5f, 0.5f));
                     }
-                    if (ImGui::BeginPopupModal("CREATE COURSE", NULL)) {
+                    bool add_course_window = true;
+                    if (ImGui::BeginPopupModal("CREATE COURSE", &add_course_window)) {
                         ImGui::Text("COURSE ID");
                         // Input filter
                         struct TextFilters
@@ -394,18 +398,30 @@ int main(int, char**) {
                             }
                         };
 
-                        static char buf1[64] = ""; ImGui::InputText("##a", buf1, 64, ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CallbackCharFilter, TextFilters::FilterImGuiLetters);// Display some text (you can use a format strings too)
-                        // TODO: implement keyboard "enter" key detection and allow enter to use the button
+                        static char buf1[64] = ""; ImGui::InputText("##a", buf1, 64, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CallbackCharFilter, TextFilters::FilterImGuiLetters);// Display some text (you can use a format strings too)
+                        // TODO: implement keyboard "enter" key detection and allow enter to use the button (additional feature)
                         if (!std::regex_match(buf1, course_match)) {
                             ImGui::Text("Invalid course code");
                         }else{
                             if (ImGui::Button("CREATE")) {
+                                //TODO: load newly create classes into .json file
                                 int count = 1;
                                 for (auto [courseCode, course] : db.getCourses()) {
                                     if (buf1 == courseCode.substr(0, courseCode.find('-')))
                                         count += 1;
                                 }
+//                                Teacher* t;
+////                                Teacher AndreaDouglas{"Andrea", "Douglas", "ENG4U", "C12345"};
+//                                for (auto [employeeID, teacher] : db.getTeachers()){
+//                                    if (employeeID == logged_in_employee){
+//                                        t = &teacher;
+//                                        break;
+//                                    }
+//                                }
                                 string output = buf1;
+//                                Course c{t, output, count, {}};
+//                                db.addCourse(c);
+//                                db.save();
                                 active_tabs.push_back(fmt::format("{}-{:02}", output, count).c_str());
                                 ImGui::CloseCurrentPopup();
                             }
@@ -502,19 +518,25 @@ int main(int, char**) {
                                     ImVec2(0.5f, 0.5f));
             // ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
             // ImGuiWindowFlags_NoCollapse
+            //TODO: link login section to .json files
             ImGui::Begin("Log in!", 0, ImGuiCond_FirstUseEver);
-            ImGui::Text("Email");
-            static char buf3[64] = "";
-            ImGui::InputText(
-                "##a", buf3,
-                64);  // Display some text (you can use a format strings too)
+            ImGui::Text("Teacher ID");
+            static char buf1[64] = "";ImGui::InputText("##a", buf1,64);  // Display some text (you can use a format strings too)
             ImGui::Text("Password");
-            static char password[64] = "";
-            ImGui::InputText("##b", password, IM_ARRAYSIZE(password), pwflags1);
+            static char password[64] = ""; ImGui::InputText("##b", password, IM_ARRAYSIZE(password), pwflags1);
             ImGui::SameLine();
             ImGui::Checkbox("Show Password", &showPW1);
             if (ImGui::Button("Sign In")) {
-                show_logged_in_window = true;
+                for (auto [employeeID, teacher]: db.getTeachers()){
+                    if (employeeID == buf1){
+                        logged_in_employee = buf1;
+                        show_logged_in_window = true;
+                        break;
+                    }
+                }
+
+                if (!show_log_in_window)
+                    ImGui::Text("INVALID EMPLOYEE ID");
                 // TODO: Validate account
                 // TODO: Save account info
             }
@@ -562,17 +584,15 @@ int main(int, char**) {
                 // TODO: Save account info
                 ImGui::OpenPopup("ACCOUNT CREATION SUCCESSFUL!");
             }
-
-            if (ImGui::BeginPopupModal("ACCOUNT CREATION SUCCESSFUL!", NULL)) {
+            bool account_creation_success_window = true;
+            if (ImGui::BeginPopupModal("ACCOUNT CREATION SUCCESSFUL!", &account_creation_success_window)) {
                 ImGui::Text(
                     "YOUR ACCOUNT HAS BEEN SUCCESSFULLY CREATED. \nLOG IN "
                     "THROUGH THE LOG IN WINDOW!");
-                if (ImGui::Button("Close")) {
-                    ImGui::CloseCurrentPopup();
-                    show_log_in_window = true;
-                }
                 ImGui::EndPopup();
             }
+            if (!account_creation_success_window)
+                show_log_in_window = true;
 
             if (ImGui::Button("Return To Log In Window")) {
                 show_log_in_window = true;
