@@ -12,6 +12,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+
 using std::cout, std::cerr, std::cin, std::endl, std::unordered_set,
     std::to_string, std::string, std::vector;
 #define GL_SILENCE_DEPRECATION
