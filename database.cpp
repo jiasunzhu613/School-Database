@@ -91,6 +91,44 @@ void log() {
     ImGui::End();
 }
 
+void addingStudentToCourse(string courseCode, bool& isCreatingStudent) {
+    ImGui::OpenPopup("Adding Student to Course");
+    if (ImGui::BeginPopupModal("Adding Student to Course",
+                               &isCreatingStudent)) {
+        const int buffSize = 11;
+        static char studentID[buffSize];
+        ImGui::InputText("Student ID", studentID, buffSize);
+
+        if (db.getStudents().contains(string{studentID})) {
+            if (ImGui::Button("Submit")) {
+                Student& studentBeingAdded =
+                    db.getStudents().at(string{studentID});
+
+                db.getCourses()[courseCode].addStudentToClass(
+                    studentBeingAdded);
+
+                unordered_set x = db.getCourses().at(courseCode).getStudents();
+                for (Student* student :
+                     db.getCourses().at(courseCode).getStudents()) {
+                    cout << student->getFirstName() << " "
+                         << student->getLastName() << endl;
+                    cout << student->getStudentId() << endl;
+                }
+                isCreatingStudent = false;
+                for (char& c : studentID) c = '\0';
+            }
+        } else {
+            ImGui::Text("Student with this ID doesn't exist");
+            if (ImGui::Button("Quit?")) {
+                isCreatingStudent = false;
+                for (char& c : studentID) c = ' ';
+            }
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
 // Main code
 int main(int, char**) {
     Teacher BenHuddy{"Benjamin", "Hudson", "ICS4U", "C69696"};
@@ -228,7 +266,7 @@ int main(int, char**) {
     bool ret2 = LoadTextureFromFile("../Images/join.png", &my_image_texture2,
                                     &my_image_width2, &my_image_height2);
     IM_ASSERT(ret2);
-
+    bool isAddingStudentToCourse = false;
     // Main loop
 #ifdef __EMSCRIPTEN__
     // For an Emscripten build we are disabling file-system access, so let's not
@@ -500,6 +538,14 @@ int main(int, char**) {
                                     ImGui::TableNextColumn();
                                     ImGui::Text(student->getAddress().c_str());
                                 }
+                                ImGui::TableNextColumn();
+                                if (ImGui::Button("Add Student to Course?"))
+                                    isAddingStudentToCourse = true;
+                                if (isAddingStudentToCourse)
+                                    addingStudentToCourse(
+                                        active_tabs[n],
+                                        isAddingStudentToCourse);
+
                                 ImGui::EndTable();
                             }
 

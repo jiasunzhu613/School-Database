@@ -21,9 +21,9 @@ class SchoolDB {
 
    public:
     SchoolDB();
-    unordered_map<string, Teacher> getTeachers();
-    unordered_map<string, Student> getStudents();
-    unordered_map<string, Course> getCourses();
+    unordered_map<string, Teacher>& getTeachers();
+    unordered_map<string, Student>& getStudents();
+    unordered_map<string, Course>& getCourses();
 
     void addStudent(Student student);
     void addTeacher(Teacher teacher);

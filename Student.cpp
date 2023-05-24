@@ -2,12 +2,12 @@
 
 Student::Student(){};
 Student::Student(string first, string last)
-    : Person{first, last}, numLates{0} {}
+    : Person{first, last}, numLates{0}, courses{} {}
 Student::Student(string f, string l, string a, int g, string id, int lates)
-    : Person{f, l, a}, grade{g}, studentId{id}, numLates{lates} {}
+    : Person{f, l, a}, grade{g}, studentId{id}, numLates{lates}, courses{} {}
 
 Student::Student(string f, string l, int g, string id, int lates)
-    : Person{f, l}, grade{g}, studentId{id}, numLates{lates} {}
+    : Person{f, l}, grade{g}, studentId{id}, numLates{lates}, courses{} {}
 
 int Student::getGrade() { return grade; }
 string Student::getStudentId() const { return studentId; }

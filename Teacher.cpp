@@ -1,8 +1,8 @@
 #include "Teacher.hpp"
 Teacher::Teacher() {}
-Teacher::Teacher(string first, string last) : Person{first, last} {}
+Teacher::Teacher(string first, string last) : Person{first, last}, courses{} {}
 Teacher::Teacher(string f, string l, string a, string t, string id)
-    : Person{f, l, a}, teachables{t}, employeeId{id} {}
+    : Person{f, l, a}, teachables{t}, employeeId{id}, courses{} {}
 Teacher::Teacher(string f, string l, string t, string id)
     : Teacher{f, l, "", t, id} {}
 
