@@ -6,27 +6,27 @@ Teacher::Teacher(string f, string l, string a, string t, string id)
 Teacher::Teacher(string f, string l, string t, string id)
     : Teacher{f, l, "", t, id} {}
 
-Teacher::Teacher(const Teacher& other) {
-    setFirstName(other.getFirstName());
-    setLastName(other.getLastName());
-    setAddress(other.getAddress());
-    setTeachables(other.teachables);
-    setEmployeeId(other.employeeId);
-    setCourses(other.courses);
-}
+//Teacher::Teacher(const Teacher& other) {
+//    setFirstName(other.getFirstName());
+//    setLastName(other.getLastName());
+//    setAddress(other.getAddress());
+//    setTeachables(other.teachables);
+//    setEmployeeId(other.employeeId);
+//    setCourses(other.courses);
+//}
 
-Teacher& Teacher::operator=(const Teacher& other) {
-    // check if objects are the same
-    if (this != &other) {
-        setTeachables(other.teachables);
-        setEmployeeId(other.employeeId);
-        setCourses(other.courses);
-        setFirstName(other.getFirstName());
-        setLastName(other.getLastName());
-        setAddress(other.getAddress());
-    }
-    return *this;
-}
+//Teacher& Teacher::operator=(const Teacher& other) {
+//    // check if objects are the same
+//    if (this != &other) {
+//        setTeachables(other.teachables);
+//        setEmployeeId(other.employeeId);
+//        setCourses(other.courses);
+//        setFirstName(other.getFirstName());
+//        setLastName(other.getLastName());
+//        setAddress(other.getAddress());
+//    }
+//    return *this;
+//}
 string Teacher::getTeachables() { return teachables; }
 
 void Teacher::setTeachables(string t) { teachables = t; }

@@ -19,8 +19,8 @@ class Teacher : public Person {
     Teacher(string first, string last);
     Teacher(string f, string l, string t, string id);
     Teacher(string f, string l, string a, string t, string id);
-    Teacher(const Teacher&);
-    Teacher& operator=(const Teacher&);
+//    Teacher(const Teacher&);
+//    Teacher& operator=(const Teacher&);
     void setTeachables(string t);
     string getTeachables();
     void setEmployeeId(string id);
