@@ -38,7 +38,7 @@ using std::cout, std::cerr, std::cin, std::endl, std::unordered_set,
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
 #endif
 
-SchoolDB db{};
+SchoolDB db;
 
 // Simple helper function to load an image into a OpenGL texture with common
 // settings
@@ -104,7 +104,7 @@ void addingStudentToCourse(string courseCode, bool& isCreatingStudent) {
                     db.getStudents().at(string{studentID});
 
                 db.getCourses()[courseCode].addStudentToClass(
-                    studentBeingAdded);
+                    &studentBeingAdded);
 
                 unordered_set x = db.getCourses().at(courseCode).getStudents();
                 for (Student* student :
@@ -130,31 +130,33 @@ void addingStudentToCourse(string courseCode, bool& isCreatingStudent) {
 
 // Main code
 int main(int, char**) {
-    Teacher BenHuddy{"Benjamin", "Hudson", "ICS4U", "C69696"};
-    Teacher Hughes{"Andy", "Hughes", "MPM4UE", "C42042"};
-
-    Student WillyGao{"William", "Gao", 69, "S123456789"};
-    Student JZhubers{"Jonathan", "Zhu", 99, "S696969696"};
-    Student RahulVedula{"Rahul", "Vedula", 5, "S420420420"};
-    Student NB{"Naman", "Biyani", 100, "S987654321"};
-
-    Course Comp_Sci{&BenHuddy, "ICS4U", 1, {&WillyGao, &JZhubers, &NB}};
-    Course Math{&Hughes, "MPM4UE", 1, {&WillyGao, &RahulVedula}};
-
-    db.addCourse(Comp_Sci);
-    db.addCourse(Math);
-
-    db.addTeacher(BenHuddy);
-    db.addTeacher(Hughes);
-
-    db.addStudent(WillyGao);
-    db.addStudent(JZhubers);
-    db.addStudent(RahulVedula);
-    db.addStudent(NB);
-
-    for (auto course : NB.getCourses())
-        cout << course->getFullCourseCode() << endl;
-    // db.save();
+    db = SchoolDB{};
+    db.reset();
+//    Teacher BenHuddy{"Benjamin", "Hudson", "ICS4U", "C69696"};
+//    Teacher Hughes{"Andy", "Hughes", "MPM4UE", "C42042"};
+//
+//    Student WillyGao{"William", "Gao", 69, "S123456789"};
+//    Student JZhubers{"Jonathan", "Zhu", 99, "S696969696"};
+//    Student RahulVedula{"Rahul", "Vedula", 5, "S420420420"};
+//    Student NB{"Naman", "Biyani", 100, "S987654321"};
+//
+//    Course Comp_Sci{&BenHuddy, "ICS4U", 1, {&WillyGao, &JZhubers, &NB}};
+//    Course Math{&Hughes, "MPM4UE", 1, {&WillyGao, &RahulVedula}};
+//
+//    db.addCourse(Comp_Sci);
+//    db.addCourse(Math);
+//
+//    db.addTeacher(BenHuddy);
+//    db.addTeacher(Hughes);
+//
+//    db.addStudent(WillyGao);
+//    db.addStudent(JZhubers);
+//    db.addStudent(RahulVedula);
+//    db.addStudent(NB);
+//
+//    for (auto course : NB.getCourses())
+//        cout << course->getFullCourseCode() << endl;
+//     db.save();
 
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) return 1;
@@ -449,24 +451,23 @@ int main(int, char**) {
                             ImGui::Text("Invalid course code");
                         } else {
                             if (ImGui::Button("CREATE")) {
-                                //TODO: load newly create classes into .json file
                                 int count = 1;
                                 for (auto [courseCode, course] : db.getCourses()) {
                                     if (buf1 == courseCode.substr(0, courseCode.find('-')))
                                         count += 1;
                                 }
-//                                Teacher* t;
-////                                Teacher AndreaDouglas{"Andrea", "Douglas", "ENG4U", "C12345"};
-//                                for (auto [employeeID, teacher] : db.getTeachers()){
-//                                    if (employeeID == logged_in_employee){
-//                                        t = &teacher;
-//                                        break;
-//                                    }
-//                                }
+                                // Load newly created course into .json file
+                                //WHY TF DOES NORMAL VARIABLE INTO REFERENCE WORK AND POINTER INTO USING THE POINTER DOESNT THIS LANGUAGE SUCKS
+                                Teacher t;
+                                for (auto [employeeID, teacher] : db.getTeachers()){
+                                    if (employeeID == logged_in_employee){
+                                        t = teacher;
+                                        break;
+                                    }
+                                }
                                 string output = buf1;
-//                                Course c{t, output, count, {}};
-//                                db.addCourse(c);
-//                                db.save();
+                                Course c{&t, output, count, {}};
+                                db.addCourse(c);
                                 active_tabs.push_back(fmt::format("{}-{:02}", output, count).c_str());
                                 ImGui::CloseCurrentPopup();
                             }
@@ -548,7 +549,7 @@ int main(int, char**) {
 
                             ImGui::EndTabItem();
                         }
-
+                        db.save();
                         // these if's control the opening and closing of new tabs
                         if (!open) {
                             active_tabs.erase(active_tabs.begin() + n);
