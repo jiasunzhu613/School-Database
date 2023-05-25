@@ -13,9 +13,9 @@ class Person {
     Person();
     Person(string first, string last);
     Person(string first, string last, string add);
-    string getFirstName();
-    string getLastName();
-    string getAddress();
+    string getFirstName() const;
+    string getLastName() const;
+    string getAddress() const;
     void setFirstName(string n);
     void setLastName(string n);
     void setAddress(string a);

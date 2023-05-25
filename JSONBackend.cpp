@@ -9,7 +9,7 @@ JSONBackend::JSONBackend() {
 
 void JSONBackend::load(SchoolDB* inMemoryDB) {
     for (const string id : db["Students"].getMemberNames()) {
-        Json::Value studentJSON = db["Students"][id];
+        Json::Value& studentJSON = db["Students"][id];
         int grade = studentJSON["Grade"].asInt();
         int numLates = studentJSON["Number of Lates"].asInt();
         string firstName = studentJSON["First Name"].asString();
@@ -24,46 +24,49 @@ void JSONBackend::load(SchoolDB* inMemoryDB) {
                 Student{firstName, lastName, address, grade, id, numLates}));
     }
 
-    for (const string id : db["Teachers"].getMemberNames()) {
-        Json::Value teacherJSON = db["Teacher"][id];
+    for (string id : db["Teachers"].getMemberNames()) {
+        Json::Value& teacherJSON = db["Teachers"][id];
+
         string firstName = teacherJSON["First Name"].asString();
         string lastName = teacherJSON["Last Name"].asString();
         string teachables = teacherJSON["Teachables"].asString();
         string address = teacherJSON["Address"].asString();
-        if (address == "")
-            inMemoryDB->teachers.insert(std::make_pair(
-                id, Teacher{firstName, lastName, teachables, id}));
-        else
-            inMemoryDB->teachers.insert(std::make_pair(
-                id, Teacher{firstName, lastName, address, teachables, id}));
+        if (address == "") {
+            inMemoryDB->teachers[id] =
+                Teacher{firstName, lastName, teachables, id};
+        } else
+            inMemoryDB->teachers[id] =
+                Teacher{firstName, lastName, address, teachables, id};
     }
 
     for (const string courseCode : db["Courses"].getMemberNames()) {
-        Json::Value courseJSON = db["Courses"][courseCode];
+        Json::Value& courseJSON = db["Courses"][courseCode];
         int hyphen = courseCode.find("-");
         string courseCodeNoSection = courseCode.substr(0, hyphen);
         int section = std::stoi(courseCode.substr(hyphen + 1));
-        Teacher* teacher =
-            &inMemoryDB->teachers.at(courseJSON["Teacher"].asString());
+
+        string teach_string = courseJSON["Teacher"].asString();
+        Teacher& teacher =
+            (inMemoryDB->teachers[courseJSON["Teacher"].asString()]);
 
         unordered_set<Student*> students{};
         for (int i = 0; i < courseJSON["Students"].size(); ++i)
             students.insert(
                 &inMemoryDB->students.at(courseJSON["Students"][i].asString()));
-        inMemoryDB->courses.insert(std::make_pair(
-            courseCode,
-            Course{teacher, courseCodeNoSection, section, students}));
+        inMemoryDB->courses.emplace(
+            std::piecewise_construct, std::make_tuple(courseCode),
+            std::make_tuple(&teacher, courseCodeNoSection, section, students));
     }
 
-    for (auto [id, student] : inMemoryDB->students)
-        for (int i = 0; i < db["Students"][id]["Courses"].size(); ++i)
-            student.addToCourse(&inMemoryDB->courses.at(
-                db["Students"][id]["Courses"][i].asString()));
+    // for (auto [id, student] : inMemoryDB->students)
+    //     for (int i = 0; i < db["Students"][id]["Courses"].size(); ++i)
+    //         student.addToCourse(&inMemoryDB->courses.at(
+    //             db["Students"][id]["Courses"][i].asString()));
 
-    for (auto [id, teacher] : inMemoryDB->teachers)
-        for (int i = 0; i < db["Teachers"][id]["Courses"].size(); ++i)
-            teacher.addToCourse(&inMemoryDB->courses.at(
-                db["Teachers"][id]["Courses"][i].asString()));
+    // for (auto [id, teacher] : inMemoryDB->teachers)
+    //     for (int i = 0; i < db["Teachers"][id]["Courses"].size(); ++i)
+    //         teacher.addToCourse(&inMemoryDB->courses.at(
+    //             db["Teachers"][id]["Courses"][i].asString()));
 }
 
 void JSONBackend::save(SchoolDB* inMemoryDB) {

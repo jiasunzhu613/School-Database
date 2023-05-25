@@ -45,7 +45,7 @@ string SchoolDB::log(bool update) {
             studentJSON["Last Name"] = student.getLastName();
             studentJSON["Address"] = student.getAddress();
             studentJSON["Courses"] = Json::arrayValue;
-            for (Course* course : student.getCourses()) {
+            for (Course* course : students[id].getCourses()) {
                 string s = course->getFullCourseCode();
                 studentJSON["Courses"].append(s);
             }
