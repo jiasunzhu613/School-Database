@@ -7,13 +7,16 @@
 #include <iostream>
 #include <regex>
 #include <string>
+#include <algorithm>
 #include <unordered_set>
 #include <vector>
 #include "SchoolDB.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+
 #define STB_IMAGE_IMPLEMENTATION
+
 #include "stb_image.h"
 
 using std::cout, std::cerr, std::cin, std::endl, std::unordered_set,
@@ -47,6 +50,7 @@ using std::cout, std::cerr, std::cin, std::endl, std::unordered_set,
 SchoolDB db;
 std::regex course_match{"([A-Z]{3}([1-2]O|[1-4]C|[1-4]M|[1-4]UE|[1-4]U))"};
 std::regex teacher_match{"([A-Z]{1}\\d{5})"};
+std::regex student_match{"([A-Z]{1}\\d{9})"};
 
 // Input filter
 struct TextFilters {
@@ -64,6 +68,15 @@ struct TextFilters {
             ImGuiInputTextCallbackData *data) {
         if (data->EventChar < 256 &&
             strchr("Cc1234567890",
+                   (char) data->EventChar))
+            return 0;
+        return 1;
+    }
+
+    static int FilterStudentIDInput(
+            ImGuiInputTextCallbackData *data) {
+        if (data->EventChar < 256 &&
+            strchr("Ss1234567890",
                    (char) data->EventChar))
             return 0;
         return 1;
@@ -184,21 +197,21 @@ int main(int, char **) {
     bool showPW3 = false;
     bool show_log_in_window = true;
     bool show_logged_in_window = false;
-    bool first_use = true;
-
-    int my_image_width = 0;
-    int my_image_height = 0;
-    GLuint my_image_texture = 0;
-    bool ret = LoadTextureFromFile("../Images/plus_sign.png", &my_image_texture,
-                                   &my_image_width, &my_image_height);
-    IM_ASSERT(ret);
-
-    int my_image_width2 = 0;
-    int my_image_height2 = 0;
-    GLuint my_image_texture2 = 0;
-    bool ret2 = LoadTextureFromFile("../Images/join.png", &my_image_texture2,
-                                    &my_image_width2, &my_image_height2);
-    IM_ASSERT(ret2);
+//    bool first_use = true;
+//
+//    int my_image_width = 0;
+//    int my_image_height = 0;
+//    GLuint my_image_texture = 0;
+//    bool ret = LoadTextureFromFile("../Images/plus_sign.png", &my_image_texture,
+//                                   &my_image_width, &my_image_height);
+//    IM_ASSERT(ret);
+//
+//    int my_image_width2 = 0;
+//    int my_image_height2 = 0;
+//    GLuint my_image_texture2 = 0;
+//    bool ret2 = LoadTextureFromFile("../Images/join.png", &my_image_texture2,
+//                                    &my_image_width2, &my_image_height2);
+//    IM_ASSERT(ret2);
     bool isAddingStudentToCourse = false;
     // Main loop
 #ifdef __EMSCRIPTEN__
@@ -248,245 +261,219 @@ int main(int, char **) {
                                     ImVec2(0.5f, 0.5f));
             // ImGuiWindowFlags_NoTitleBar
             ImGui::Begin("##a", 0);
-            if (first_use) {
-                ImGui::SetCursorPos(ImVec2(
-                        (ImGui::GetWindowSize().x - (my_image_width / 5)) * 0.5f,
-                        (ImGui::GetWindowSize().y - (my_image_height / 5)) * 0.5f));
-                if (ImGui::ImageButton(
-                        (void *) (intptr_t) my_image_texture,
-                        ImVec2(my_image_width / 5, my_image_height / 5))) {
-                    ImGui::OpenPopup("CREATE SCHOOL");
-                    ImGui::SetNextWindowSize(ImVec2(400, 200));
-                    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
-                                            ImVec2(0.5f, 0.5f));
-                }
-                bool create_school_window = true;
-                if (ImGui::BeginPopupModal("CREATE SCHOOL",
-                                           &create_school_window)) {
-                    ImGui::Text("SCHOOL ID or SCHOOL NAME");
-                    static char buf3[64] = "";
-                    ImGui::InputText("##a", buf3, 64);
-                    ImGui::Text("Password");
-                    static char password2[64] = "";
-                    ImGui::InputText("##b", password2, IM_ARRAYSIZE(password2),
-                                     pwflags2);
-                    ImGui::SameLine();
-                    ImGui::Checkbox("Show Password", &showPW2);
-                    ImGui::Text("Confirm Password");
-                    static char password3[64] = "";
-                    ImGui::InputText("##c", password3, IM_ARRAYSIZE(password3),
-                                     pwflags3);
-                    ImGui::SameLine();
-                    ImGui::Checkbox("Show Password##", &showPW3);
-                    if (ImGui::Button("CREATE")) {
-                        ImGui::CloseCurrentPopup();
-                        first_use = false;
-                    }
-                    ImGui::EndPopup();
-                }
-                // TODO: click "+" opens up new window or popup to create and
-                // configure a new school
-                ImGui::SetCursorPos(
-                        ImVec2((ImGui::GetWindowSize().x - (my_image_width2 / 15) -
-                                (1.5 * my_image_width / 5)) *
-                               0.5f,
-                               (ImGui::GetWindowSize().y - (my_image_height2 / 15) -
-                                ((my_image_height2 / 15) - my_image_height / 5)) *
-                               0.5f));
-                if (ImGui::ImageButton(
-                        (void *) (intptr_t) my_image_texture2,
-                        ImVec2(my_image_width2 / 15, my_image_height2 / 15))) {
-                    ImGui::OpenPopup("JOIN SCHOOL");
-                    ImGui::SetNextWindowSize(ImVec2(400, 200));
-                    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
-                                            ImVec2(0.5f, 0.5f));
-                }
-                bool join_school_window = true;
-                if (ImGui::BeginPopupModal("JOIN SCHOOL",
-                                           &join_school_window)) {
-                    ImGui::Text("SCHOOL ID or SCHOOL NAME");
-                    static char buf3[64] = "";
-                    ImGui::InputText("##a", buf3, 64);
-                    ImGui::Text("Password");
-                    static char password2[64] = "";
-                    ImGui::InputText("##b", password2, IM_ARRAYSIZE(password2),
-                                     pwflags2);
-                    ImGui::SameLine();
-                    ImGui::Checkbox("Show Password", &showPW2);
-                    // TODO: click join opens up a pop up to enter code and
-                    // passwords to get into a school
-                    if (ImGui::Button("JOIN")) {
-                        ImGui::CloseCurrentPopup();
-                        first_use = false;
-                    }
-                    ImGui::EndPopup();
-                }
-                ImGui::End();
-            } else {
-                static vector<std::string> active_tabs{};
-                static int next_tab_id = 0;
-                if (next_tab_id == 0) {
-                    for (auto [courseCode, course]: db.getCourses()) {
+            static vector<std::string> active_tabs{};
+            static int next_tab_id = 0;
+            if (next_tab_id == 0) {
+                for (auto [courseCode, course]: db.getCourses()) {
+                    if (course.getTeacher()->getEmployeeId() == logged_in_employee) {
                         active_tabs.push_back(courseCode);
                         next_tab_id++;
                     }
                 }
-
-                static ImGuiTabBarFlags tab_bar_flags =
-                        ImGuiTabBarFlags_AutoSelectNewTabs |
-                        ImGuiTabBarFlags_Reorderable |
-                        ImGuiTabBarFlags_FittingPolicyResizeDown |
-                        ImGuiTabBarFlags_TabListPopupButton;
-
-                if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
-                    // Demo Trailing Tabs: click the "+" button to add a new tab
-                    // (in your app you may want to use a font icon instead of
-                    // the "+") Note that we submit it before the regular tabs,
-                    // but because of the ImGuiTabItemFlags_Trailing flag it
-                    // will always appear at the end.
-                    if (ImGui::TabItemButton("+",
-                                             ImGuiTabItemFlags_Trailing |
-                                             ImGuiTabItemFlags_NoTooltip)) {
-                        ImGui::OpenPopup("CREATE COURSE");
-                        ImGui::SetNextWindowSize(ImVec2(400, 200));
-                        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
-                                                ImVec2(0.5f, 0.5f));
-                    }
-                    bool add_course_window = true;
-                    if (ImGui::BeginPopupModal("CREATE COURSE",
-                                               &add_course_window)) {
-                        ImGui::Text("COURSE ID");
-
-                        static char buf1[64] = "";
-                        ImGui::InputText(
-                                "##a", buf1, 64,
-                                ImGuiInputTextFlags_EnterReturnsTrue |
-                                ImGuiInputTextFlags_CharsUppercase |
-                                ImGuiInputTextFlags_CallbackCharFilter,
-                                TextFilters::FilterCourseInput);
-                        // TODO: (might be too hard tbh) implement keyboard "enter" key detection and
-                        // allow enter to use the button (additional feature)
-                        ImGui::SameLine();
-                        HelpMarker(
-                                "Only courses that haven't been created will be validated and allowed to be created. Valid course codes (e.g. MPM4UE, ICS4U, AVI2O) consist of 3 letters followed by a number course grade then a course difficulty).");
-                        //TODO: change course validation to call function
-
-                        if (!std::regex_match(buf1, course_match)){
-                            ImGui::Text("INVALID COURSE CODE");
-                        }else{
-                            if (ImGui::Button("CREATE")) {
-                                int count = 1;
-                                for (auto [courseCode, course]:
-                                        db.getCourses()) {
-                                    if (buf1 == courseCode.substr(
-                                            0, courseCode.find('-')))
-                                        count += 1;
-                                }
-                                Teacher t;
-                                for (auto [employeeID, teacher]:
-                                        db.getTeachers()) {
-                                    if (employeeID == logged_in_employee) {
-                                        t = teacher;
-                                        break;
-                                    }
-                                }
-                                string output = buf1;
-                                Course c{&t, output, count, {}};
-                                db.addCourse(c);
-                                active_tabs.push_back(
-                                        fmt::format("{}-{:02}", output, count)
-                                                .c_str());
-                                ImGui::CloseCurrentPopup();
-                            }
-                        }
-                        ImGui::EndPopup();
-                    }
-
-                    // Submit our regular tabs
-                    for (int n = 0; n < active_tabs.size();) {
-                        bool open = true;
-                        char name[16];
-                        snprintf(name, IM_ARRAYSIZE(name), "%s",
-                                 active_tabs[n].c_str());
-                        if (ImGui::BeginTabItem(name, &open,
-                                                ImGuiTabItemFlags_None)) {
-                            if (ImGui::BeginTable(
-                                    fmt::format("Students of {}",
-                                                active_tabs[n])
-                                            .c_str(),
-                                    6,
-                                    ImGuiTableFlags_RowBg |
-                                    ImGuiTableFlags_Borders |
-                                    ImGuiTableFlags_BordersH |
-                                    ImGuiTableFlags_BordersOuterH |
-                                    ImGuiTableFlags_BordersInnerH |
-                                    ImGuiTableFlags_BordersV |
-                                    ImGuiTableFlags_BordersOuterV |
-                                    ImGuiTableFlags_BordersInnerV |
-                                    ImGuiTableFlags_BordersOuter |
-                                    ImGuiTableFlags_BordersInner)) {
-                                ImGui::TableNextRow();
-                                ImGui::TableSetBgColor(
-                                        ImGuiTableBgTarget_RowBg0,
-                                        ImGui::GetColorU32(table_header_color));
-                                ImGui::TableNextColumn();
-                                ImGui::Text("Student ID");
-                                ImGui::TableNextColumn();
-                                ImGui::Text("First Name");
-                                ImGui::TableNextColumn();
-                                ImGui::Text("Last Name");
-                                ImGui::TableNextColumn();
-                                ImGui::Text("Grade");
-                                ImGui::TableNextColumn();
-                                ImGui::Text("Number of Lates");
-                                ImGui::TableNextColumn();
-                                ImGui::Text("Address");
-                                for (auto student:
-                                        db.getCourses()[active_tabs[n]]
-                                                .getStudents()) {
-                                    ImGui::TableNextColumn();
-                                    ImGui::Text(
-                                            student->getStudentId().c_str());
-                                    ImGui::TableNextColumn();
-                                    ImGui::Text(
-                                            student->getFirstName().c_str());
-                                    ImGui::TableNextColumn();
-                                    ImGui::Text(student->getLastName().c_str());
-                                    ImGui::TableNextColumn();
-                                    ImGui::Text(
-                                            to_string(student->getGrade()).c_str());
-                                    ImGui::TableNextColumn();
-                                    ImGui::Text(
-                                            to_string(student->getNumLates())
-                                                    .c_str());
-                                    ImGui::TableNextColumn();
-                                    ImGui::Text(student->getAddress().c_str());
-                                }
-                                ImGui::TableNextColumn();
-                                if (ImGui::Button("Add Student to Course?"))
-                                    isAddingStudentToCourse = true;
-                                if (isAddingStudentToCourse)
-                                    addingStudentToCourse(
-                                            active_tabs[n],
-                                            isAddingStudentToCourse);
-
-                                ImGui::EndTable();
-                            }
-
-                            ImGui::EndTabItem();
-                        }
-                        db.save();
-                        // these if's control the opening and closing of new
-                        // tabs
-                        if (!open) {
-                            active_tabs.erase(active_tabs.begin() + n);
-                        } else
-                            n++;
-                    }
-                    ImGui::EndTabBar();
-                }
-                ImGui::End();
             }
+
+            static ImGuiTabBarFlags tab_bar_flags =
+                    ImGuiTabBarFlags_AutoSelectNewTabs |
+                    ImGuiTabBarFlags_Reorderable |
+                    ImGuiTabBarFlags_FittingPolicyResizeDown |
+                    ImGuiTabBarFlags_TabListPopupButton;
+
+            if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
+                // Demo Trailing Tabs: click the "+" button to add a new tab
+                // (in your app you may want to use a font icon instead of
+                // the "+") Note that we submit it before the regular tabs,
+                // but because of the ImGuiTabItemFlags_Trailing flag it
+                // will always appear at the end.
+                if (ImGui::TabItemButton("OPEN", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip)) {
+                    ImGui::OpenPopup("OPEN COURSE");
+                    ImGui::SetNextWindowSize(ImVec2(400, 200));
+                    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
+                                            ImVec2(0.5f, 0.5f));
+                }
+                bool open_course_window = true;
+                if (ImGui::BeginPopupModal("OPEN COURSE", &open_course_window)) {
+                    vector<string> items{};
+                    for (auto [courseCode, course]: db.getCourses()) {
+                        if (find(active_tabs.begin(), active_tabs.end(), courseCode) == active_tabs.end() and
+                            course.getTeacher()->getEmployeeId() == logged_in_employee) {
+                            items.push_back(courseCode);
+                        }
+                    }
+                    static int item_current_idx = 0; // Here we store our selection data as an index.
+                    // Custom size: use all width, 5 items tall
+                    if (!items.empty())
+                        ImGui::Text("UNOPENED COURSES:");
+                    else
+                        ImGui::Text("ALL AVAILABLE COURSES HAVE ALREADY BEEN OPENED.");
+                    if (ImGui::BeginListBox("##listbox",
+                                            ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing()))) {
+                        for (int n = 0; n < items.size(); n++) {
+                            const bool is_selected = (item_current_idx == n);
+                            if (ImGui::Selectable(items[n].c_str(), is_selected))
+                                item_current_idx = n;
+
+                            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                            if (is_selected)
+                                ImGui::SetItemDefaultFocus();
+                        }
+                        ImGui::EndListBox();
+                    }
+                    if (!items.empty()) {
+                        if (ImGui::Button("OPEN")) {
+                            active_tabs.push_back(items[item_current_idx]);
+                            next_tab_id++;
+                            ImGui::CloseCurrentPopup();
+                        }
+                    }else {
+                        if (ImGui::Button("CLOSE"))
+                            ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
+
+                //TODO: add trailing "open" button to open unopened courses
+                if (ImGui::TabItemButton("+",
+                                         ImGuiTabItemFlags_Trailing |
+                                         ImGuiTabItemFlags_NoTooltip)) {
+                    ImGui::OpenPopup("CREATE COURSE");
+                    ImGui::SetNextWindowSize(ImVec2(400, 200));
+                    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
+                                            ImVec2(0.5f, 0.5f));
+                }
+                bool add_course_window = true;
+                if (ImGui::BeginPopupModal("CREATE COURSE",
+                                           &add_course_window)) {
+                    ImGui::Text("COURSE ID");
+
+                    static char buf1[64] = "";
+                    ImGui::InputText(
+                            "##a", buf1, 64,
+                            ImGuiInputTextFlags_EnterReturnsTrue |
+                            ImGuiInputTextFlags_CharsUppercase |
+                            ImGuiInputTextFlags_CallbackCharFilter,
+                            TextFilters::FilterCourseInput);
+                    // TODO: (might be too hard tbh) implement keyboard "enter" key detection and
+                    // allow enter to use the button (additional feature)
+                    ImGui::SameLine();
+                    HelpMarker(
+                            "Only courses that haven't been created will be validated and allowed to be created. Valid course codes (e.g. MPM4UE, ICS4U, AVI2O) consist of 3 letters followed by a number course grade then a course difficulty).");
+                    //TODO: change course validation to call function
+
+                    if (!std::regex_match(buf1, course_match)) {
+                        ImGui::Text("INVALID COURSE CODE");
+                    } else {
+                        if (ImGui::Button("CREATE")) {
+                            int count = 1;
+                            for (auto [courseCode, course]:
+                                    db.getCourses()) {
+                                if (buf1 == courseCode.substr(
+                                        0, courseCode.find('-')))
+                                    count += 1;
+                            }
+                            Teacher t;
+                            for (auto [employeeID, teacher]:
+                                    db.getTeachers()) {
+                                if (employeeID == logged_in_employee) {
+                                    t = teacher;
+                                    break;
+                                }
+                            }
+                            string output = buf1;
+                            Course c{&t, output, count, {}};
+                            db.addCourse(c);
+                            active_tabs.push_back(
+                                    fmt::format("{}-{:02}", output, count)
+                                            .c_str());
+                            ImGui::CloseCurrentPopup();
+                        }
+                    }
+                    ImGui::EndPopup();
+                }
+
+                // Submit our regular tabs
+                for (int n = 0; n < active_tabs.size();) {
+                    bool open = true;
+                    char name[16];
+                    snprintf(name, IM_ARRAYSIZE(name), "%s",
+                             active_tabs[n].c_str());
+                    if (ImGui::BeginTabItem(name, &open,
+                                            ImGuiTabItemFlags_None)) {
+                        if (ImGui::BeginTable(
+                                fmt::format("Students of {}",
+                                            active_tabs[n])
+                                        .c_str(),
+                                6,
+                                ImGuiTableFlags_RowBg |
+                                ImGuiTableFlags_Borders |
+                                ImGuiTableFlags_BordersH |
+                                ImGuiTableFlags_BordersOuterH |
+                                ImGuiTableFlags_BordersInnerH |
+                                ImGuiTableFlags_BordersV |
+                                ImGuiTableFlags_BordersOuterV |
+                                ImGuiTableFlags_BordersInnerV |
+                                ImGuiTableFlags_BordersOuter |
+                                ImGuiTableFlags_BordersInner)) {
+                            ImGui::TableNextRow();
+                            ImGui::TableSetBgColor(
+                                    ImGuiTableBgTarget_RowBg0,
+                                    ImGui::GetColorU32(table_header_color));
+                            ImGui::TableNextColumn();
+                            ImGui::Text("Student ID");
+                            ImGui::TableNextColumn();
+                            ImGui::Text("First Name");
+                            ImGui::TableNextColumn();
+                            ImGui::Text("Last Name");
+                            ImGui::TableNextColumn();
+                            ImGui::Text("Grade");
+                            ImGui::TableNextColumn();
+                            ImGui::Text("Number of Lates");
+                            ImGui::TableNextColumn();
+                            ImGui::Text("Address");
+                            for (auto student:
+                                    db.getCourses()[active_tabs[n]]
+                                            .getStudents()) {
+                                ImGui::TableNextColumn();
+                                ImGui::Text(
+                                        student->getStudentId().c_str());
+                                ImGui::TableNextColumn();
+                                ImGui::Text(
+                                        student->getFirstName().c_str());
+                                ImGui::TableNextColumn();
+                                ImGui::Text(student->getLastName().c_str());
+                                ImGui::TableNextColumn();
+                                ImGui::Text(
+                                        to_string(student->getGrade()).c_str());
+                                ImGui::TableNextColumn();
+                                ImGui::Text(
+                                        to_string(student->getNumLates())
+                                                .c_str());
+                                ImGui::TableNextColumn();
+                                ImGui::Text(student->getAddress().c_str());
+                            }
+                            ImGui::TableNextColumn();
+                            if (ImGui::Button("Add Student to Course?"))
+                                isAddingStudentToCourse = true;
+                            if (isAddingStudentToCourse)
+                                addingStudentToCourse(
+                                        active_tabs[n],
+                                        isAddingStudentToCourse);
+
+                            ImGui::EndTable();
+                        }
+
+                        ImGui::EndTabItem();
+                    }
+                    db.save();
+                    // these if's control the opening and closing of new
+                    // tabs
+                    if (!open) {
+                        active_tabs.erase(active_tabs.begin() + n);
+                    } else
+                        n++;
+                }
+                ImGui::EndTabBar();
+            }
+            ImGui::End();
         }
             // 2. Show a simple window that we create ourselves. We use a Begin/End
             // pair to create a named window.
@@ -687,7 +674,10 @@ void addingStudentToCourse(string courseCode, bool &isCreatingStudent) {
                                &isCreatingStudent)) {
         const int buffSize = 11;
         static char studentID[buffSize];
-        ImGui::InputText("Student ID", studentID, buffSize);
+        ImGui::InputText("Student ID", studentID, buffSize, ImGuiInputTextFlags_EnterReturnsTrue |
+                                                            ImGuiInputTextFlags_CharsUppercase |
+                                                            ImGuiInputTextFlags_CallbackCharFilter,
+                         TextFilters::FilterStudentIDInput);
 
         if (db.getStudents().contains(string{studentID})) {
             if (ImGui::Button("Submit")) {
