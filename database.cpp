@@ -1,22 +1,25 @@
+/*******************************/
+/********Includes/Set Up********/
+/*******************************/
+
 #include <fmt/core.h>
 #include <stdio.h>
-
 #include <iostream>
 #include <regex>
 #include <string>
 #include <unordered_set>
 #include <vector>
-
 #include "SchoolDB.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 using std::cout, std::cerr, std::cin, std::endl, std::unordered_set,
     std::to_string, std::string, std::vector;
+
 #define GL_SILENCE_DEPRECATION
+#define STB_IMAGE_IMPLEMENTATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
 #endif
@@ -39,129 +42,51 @@ using std::cout, std::cerr, std::cin, std::endl, std::unordered_set,
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
 #endif
 
+//Declare global variables
 SchoolDB db;
+std::regex course_match{"([A-Z]{3}([1-2]O|[1-4]C|[1-4]M|[1-4]UE|[1-4]U))"};
+std::regex teacher_match{"([A-Z]{1}\\d{5})"};
 
-// Simple helper function to load an image into a OpenGL texture with common
-// settings
-bool LoadTextureFromFile(const char* filename, GLuint* out_texture,
-                         int* out_width, int* out_height) {
-    // Load from file
-    int image_width = 0;
-    int image_height = 0;
-    unsigned char* image_data =
-        stbi_load(filename, &image_width, &image_height, NULL, 4);
-    if (image_data == NULL) return false;
-
-    // Create a OpenGL texture identifier
-    GLuint image_texture;
-    glGenTextures(1, &image_texture);
-    glBindTexture(GL_TEXTURE_2D, image_texture);
-
-    // Setup filtering parameters for display
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                    GL_CLAMP_TO_EDGE);  // This is required on WebGL for non
-                                        // power-of-two textures
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-                    GL_CLAMP_TO_EDGE);  // Same
-
-    // Upload pixels into texture
-#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-#endif
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-    stbi_image_free(image_data);
-
-    *out_texture = image_texture;
-    *out_width = image_width;
-    *out_height = image_height;
-
-    return true;
-}
-
-static void glfw_error_callback(int error, const char* description) {
-    fprintf(stderr, "GLFW Error %d: %s\n", error, description);
-}
-
-void log() {
-    ImGui::Begin("Log");
-    ImGui::Text(db.log(ImGui::Button("Update Logging?")).c_str());
-    ImGui::End();
-}
-
-void addingStudentToCourse(string courseCode, bool& isCreatingStudent) {
-    ImGui::OpenPopup("Adding Student to Course");
-    if (ImGui::BeginPopupModal("Adding Student to Course",
-                               &isCreatingStudent)) {
-        const int buffSize = 11;
-        static char studentID[buffSize];
-        ImGui::InputText("Student ID", studentID, buffSize);
-
-        if (db.getStudents().contains(string{studentID})) {
-            if (ImGui::Button("Submit")) {
-                Student& studentBeingAdded =
-                    db.getStudents().at(string{studentID});
-
-                db.getCourses()[courseCode].addStudentToClass(
-                    &studentBeingAdded);
-
-                unordered_set x = db.getCourses().at(courseCode).getStudents();
-                for (Student* student :
-                     db.getCourses().at(courseCode).getStudents()) {
-                    cout << student->getFirstName() << " "
-                         << student->getLastName() << endl;
-                    cout << student->getStudentId() << endl;
-                }
-                isCreatingStudent = false;
-                for (char& c : studentID) c = '\0';
-            }
-        } else {
-            ImGui::Text("Student with this ID doesn't exist");
-            if (ImGui::Button("Quit?")) {
-                isCreatingStudent = false;
-                for (char& c : studentID) c = ' ';
-            }
-        }
-
-        ImGui::EndPopup();
+// Input filter
+struct TextFilters {
+    static int FilterCourseInput(
+            ImGuiInputTextCallbackData* data) {
+        if (data->EventChar < 256 &&
+            strchr("QWERTYUIOPASDFGHJKLZXCVBNMqwertyuio"
+                   "pasdfghjklzxcvbnm1234",
+                   (char)data->EventChar))
+            return 0;
+        return 1;
     }
-}
+
+    static int FilterTeacherIDInput(
+            ImGuiInputTextCallbackData* data) {
+        if (data->EventChar < 256 &&
+            strchr("Cc1234567890",
+                   (char)data->EventChar))
+            return 0;
+        return 1;
+    }
+};
+
+//Declare functions (initialized at the bottom of file)
+bool LoadTextureFromFile(const char*, GLuint*, int*, int*);
+
+static void glfw_error_callback(int, const char*);
+
+static void HelpMarker(const char*);
+
+void log();
+
+bool validateInputTeacherID(string);
+
+void addingStudentToCourse(string, bool&);
+
 
 // Main code
 int main(int, char**) {
     db = SchoolDB{};
     db.reset();
-
-    string x = db.log(true);
-    cout << db.log() << endl;
-
-    //    Teacher BenHuddy{"Benjamin", "Hudson", "ICS4U", "C69696"};
-    //    Teacher Hughes{"Andy", "Hughes", "MPM4UE", "C42042"};
-    //
-    //    Student WillyGao{"William", "Gao", 69, "S123456789"};
-    //    Student JZhubers{"Jonathan", "Zhu", 99, "S696969696"};
-    //    Student RahulVedula{"Rahul", "Vedula", 5, "S420420420"};
-    //    Student NB{"Naman", "Biyani", 100, "S987654321"};
-    //
-    //    Course Comp_Sci{&BenHuddy, "ICS4U", 1, {&WillyGao, &JZhubers, &NB}};
-    //    Course Math{&Hughes, "MPM4UE", 1, {&WillyGao, &RahulVedula}};
-    //
-    //    db.addCourse(Comp_Sci);
-    //    db.addCourse(Math);
-    //
-    //    db.addTeacher(BenHuddy);
-    //    db.addTeacher(Hughes);
-    //
-    //    db.addStudent(WillyGao);
-    //    db.addStudent(JZhubers);
-    //    db.addStudent(RahulVedula);
-    //    db.addStudent(NB);
-    //
-    //    for (auto course : NB.getCourses())
-    //        cout << course->getFullCourseCode() << endl;
-    //     db.save();
 
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) return 1;
@@ -248,7 +173,7 @@ int main(int, char**) {
     //    bool show_another_window = false;
     //    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     string logged_in_employee;
-    std::regex course_match{"([A-Z]{3}([1-2]O|[1-4]C|[1-4]M|[1-4]UE|[1-4]U))"};
+    bool valid_log_in = true;
     ImVec4 table_header_color = ImVec4(0.48f, 0.31f, 0.82f, 1.00f);
     int pwflags1 = ImGuiInputTextFlags_Password;
     bool showPW1 = false;
@@ -406,19 +331,6 @@ int main(int, char**) {
                     }
                 }
 
-                // TabItemButton() and Leading/Trailing flags are distinct
-                // features which we will demo together. (It is possible to
-                // submit regular tabs with Leading/Trailing flags, or
-                // TabItemButton tabs without Leading/Trailing flags... but they
-                // tend to make more sense together)
-                //            static bool show_leading_button = true;
-                //            static bool show_trailing_button = true;
-                //            ImGui::Checkbox("Show Leading TabItemButton()",
-                //            &show_leading_button); ImGui::Checkbox("Show
-                //            Trailing TabItemButton()", &show_trailing_button);
-
-                // Expose some other flags which are useful to showcase how they
-                // interact with Leading/Trailing tabs
                 static ImGuiTabBarFlags tab_bar_flags =
                     ImGuiTabBarFlags_AutoSelectNewTabs |
                     ImGuiTabBarFlags_Reorderable |
@@ -443,20 +355,6 @@ int main(int, char**) {
                     if (ImGui::BeginPopupModal("CREATE COURSE",
                                                &add_course_window)) {
                         ImGui::Text("COURSE ID");
-                        // Input filter
-                        struct TextFilters {
-                            // Return 0 (pass) if the character is 'i' or 'm' or
-                            // 'g' or 'u' or 'i'
-                            static int FilterImGuiLetters(
-                                ImGuiInputTextCallbackData* data) {
-                                if (data->EventChar < 256 &&
-                                    strchr("QWERTYUIOPASDFGHJKLZXCVBNMqwertyuio"
-                                           "pasdfghjklzxcvbnm1234",
-                                           (char)data->EventChar))
-                                    return 0;
-                                return 1;
-                            }
-                        };
 
                         static char buf1[64] = "";
                         ImGui::InputText(
@@ -464,12 +362,11 @@ int main(int, char**) {
                             ImGuiInputTextFlags_EnterReturnsTrue |
                                 ImGuiInputTextFlags_CharsUppercase |
                                 ImGuiInputTextFlags_CallbackCharFilter,
-                            TextFilters::FilterImGuiLetters);  // Display some
-                                                               // text (you can
-                                                               // use a format
-                                                               // strings too)
-                        // TODO: implement keyboard "enter" key detection and
+                            TextFilters::FilterCourseInput);
+                        // TODO: (might be too hard tbh) implement keyboard "enter" key detection and
                         // allow enter to use the button (additional feature)
+                        ImGui::SameLine(); HelpMarker("Only courses that haven't been created will be validated and allowed to be created. Valid course codes (e.g. MPM4UE, ICS4U, AVI2O) consist of 3 letters followed by a number course grade then a course difficulty).");
+                        //TODO: change course validation to call function
                         if (!std::regex_match(buf1, course_match)) {
                             ImGui::Text("Invalid course code");
                         } else {
@@ -481,10 +378,6 @@ int main(int, char**) {
                                                     0, courseCode.find('-')))
                                         count += 1;
                                 }
-                                // Load newly created course into .json file
-                                // WHY TF DOES NORMAL VARIABLE INTO REFERENCE
-                                // WORK AND POINTER INTO USING THE POINTER
-                                // DOESNT THIS LANGUAGE SUCKS
                                 Teacher t;
                                 for (auto [employeeID, teacher] :
                                      db.getTeachers()) {
@@ -603,13 +496,16 @@ int main(int, char**) {
                                     ImVec2(0.5f, 0.5f));
             // ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
             // ImGuiWindowFlags_NoCollapse
-            // TODO: link login section to .json files
             ImGui::Begin("Log in!", 0, ImGuiCond_FirstUseEver);
             ImGui::Text("Teacher ID");
             static char buf1[64] = "";
             ImGui::InputText(
                 "##a", buf1,
-                64);  // Display some text (you can use a format strings too)
+                64, ImGuiInputTextFlags_EnterReturnsTrue |
+                    ImGuiInputTextFlags_CharsUppercase |
+                    ImGuiInputTextFlags_CallbackCharFilter,
+                TextFilters::FilterTeacherIDInput);  // Display some text (you can use a format strings too)
+            //TODO: implement password functionality
             ImGui::Text("Password");
             static char password[64] = "";
             ImGui::InputText("##b", password, IM_ARRAYSIZE(password), pwflags1);
@@ -623,19 +519,12 @@ int main(int, char**) {
                         break;
                     }
                 }
-
-                if (!show_log_in_window) ImGui::Text("INVALID EMPLOYEE ID");
-                // TODO: Validate account
-                // TODO: Save account info
             }
             ImGui::SameLine();
-            ImGui::Text("New User?");
+            ImGui::Text("New Teacher?");
             ImGui::SameLine();
-            if (ImGui::Button("Create Account")) {
+            if (ImGui::Button("Create Teacher ID")) {
                 show_log_in_window = false;
-                // TODO: Move to other window
-                // TODO: Create account info
-                // TODO: Save account info
             }
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                         1000.0f / io.Framerate, io.Framerate);
@@ -649,11 +538,14 @@ int main(int, char**) {
             // ImGuiWindowFlags_NoCollapse
             ImGui::Begin("Sign Up!", 0,
                          ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoResize);
-            ImGui::Text("Email");
-            static char buf3[64] = "";
+            ImGui::Text("Teacher ID");
+            static char buf1[64] = "";
             ImGui::InputText(
-                "##a", buf3,
-                64);  // Display some text (you can use a format strings too)
+                "##a", buf1,
+                64, ImGuiInputTextFlags_EnterReturnsTrue |
+                    ImGuiInputTextFlags_CharsUppercase |
+                    ImGuiInputTextFlags_CallbackCharFilter,
+                TextFilters::FilterTeacherIDInput);  // Display some text (you can use a format strings too)
             ImGui::Text("Password");
             static char password2[64] = "";
             ImGui::InputText("##b", password2, IM_ARRAYSIZE(password2),
@@ -667,21 +559,20 @@ int main(int, char**) {
             ImGui::SameLine();
             ImGui::Checkbox("Show Password##", &showPW3);
             if (ImGui::Button("Sign Up")) {
+                if (validateInputTeacherID(buf1)){
+                    db.addTeacher(Teacher("", "", "", buf1));
+                    ImGui::OpenPopup("ID CREATION SUCCESSFUL!");
+                }
                 // TODO: Check if password and confirm password are equal
                 // TODO: Validate account
                 // TODO: Save account info
-                ImGui::OpenPopup("ACCOUNT CREATION SUCCESSFUL!");
             }
             bool account_creation_success_window = true;
-            if (ImGui::BeginPopupModal("ACCOUNT CREATION SUCCESSFUL!",
+            if (ImGui::BeginPopupModal("ID CREATION SUCCESSFUL!",
                                        &account_creation_success_window)) {
                 ImGui::Text(
-                    "YOUR ACCOUNT HAS BEEN SUCCESSFULLY CREATED. \nLOG IN "
+                    "YOUR ID HAS BEEN SUCCESSFULLY CREATED. \nLOG IN "
                     "THROUGH THE LOG IN WINDOW!");
-                if (ImGui::Button("Close")) {
-                    ImGui::CloseCurrentPopup();
-                    show_log_in_window = true;
-                }
                 ImGui::EndPopup();
             }
             if (!account_creation_success_window) show_log_in_window = true;
@@ -721,4 +612,118 @@ int main(int, char**) {
     glfwTerminate();
 
     return 0;
+}
+
+/*************************/
+/********Functions********/
+/*************************/
+
+// Simple helper function to load an image into a OpenGL texture with common
+// settings
+bool LoadTextureFromFile(const char* filename, GLuint* out_texture,
+                         int* out_width, int* out_height) {
+    // Load from file
+    int image_width = 0;
+    int image_height = 0;
+    unsigned char* image_data =
+            stbi_load(filename, &image_width, &image_height, NULL, 4);
+    if (image_data == NULL) return false;
+
+    // Create a OpenGL texture identifier
+    GLuint image_texture;
+    glGenTextures(1, &image_texture);
+    glBindTexture(GL_TEXTURE_2D, image_texture);
+
+    // Setup filtering parameters for display
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                    GL_CLAMP_TO_EDGE);  // This is required on WebGL for non
+    // power-of-two textures
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                    GL_CLAMP_TO_EDGE);  // Same
+
+    // Upload pixels into texture
+#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+#endif
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+    stbi_image_free(image_data);
+
+    *out_texture = image_texture;
+    *out_width = image_width;
+    *out_height = image_height;
+
+    return true;
+}
+
+static void glfw_error_callback(int error, const char* description) {
+    fprintf(stderr, "GLFW Error %d: %s\n", error, description);
+}
+
+static void HelpMarker(const char* desc)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort) && ImGui::BeginTooltip())
+    {
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
+void log() {
+    ImGui::Begin("Log");
+    ImGui::Text(db.log(ImGui::Button("Update Logging?")).c_str());
+    ImGui::End();
+}
+
+void addingStudentToCourse(string courseCode, bool& isCreatingStudent) {
+    ImGui::OpenPopup("Adding Student to Course");
+    if (ImGui::BeginPopupModal("Adding Student to Course",
+                               &isCreatingStudent)) {
+        const int buffSize = 11;
+        static char studentID[buffSize];
+        ImGui::InputText("Student ID", studentID, buffSize);
+
+        if (db.getStudents().contains(string{studentID})) {
+            if (ImGui::Button("Submit")) {
+                Student& studentBeingAdded =
+                        db.getStudents().at(string{studentID});
+
+                db.getCourses()[courseCode].addStudentToClass(
+                        &studentBeingAdded);
+
+                unordered_set x = db.getCourses().at(courseCode).getStudents();
+                for (Student* student :
+                        db.getCourses().at(courseCode).getStudents()) {
+                    cout << student->getFirstName() << " "
+                         << student->getLastName() << endl;
+                    cout << student->getStudentId() << endl;
+                }
+                isCreatingStudent = false;
+                for (char& c : studentID) c = '\0';
+            }
+        } else {
+            ImGui::Text("Student with this ID doesn't exist");
+            if (ImGui::Button("Quit?")) {
+                isCreatingStudent = false;
+                for (char& c : studentID) c = ' ';
+            }
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
+bool validateInputTeacherID(string in){
+    if (!std::regex_match(in, teacher_match))
+        return false;
+    for (auto [id, teacher] : db.getTeachers()){
+        if (id == in)
+            return false;
+    }
+    return true;
 }
