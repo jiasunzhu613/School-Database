@@ -370,7 +370,10 @@ int main(int, char **) {
                         HelpMarker(
                                 "Only courses that haven't been created will be validated and allowed to be created. Valid course codes (e.g. MPM4UE, ICS4U, AVI2O) consist of 3 letters followed by a number course grade then a course difficulty).");
                         //TODO: change course validation to call function
-                        if (std::regex_match(buf1, course_match)) {
+
+                        if (!std::regex_match(buf1, course_match)){
+                            ImGui::Text("INVALID COURSE CODE");
+                        }else{
                             if (ImGui::Button("CREATE")) {
                                 int count = 1;
                                 for (auto [courseCode, course]:
@@ -395,19 +398,7 @@ int main(int, char **) {
                                                 .c_str());
                                 ImGui::CloseCurrentPopup();
                             }
-                        } else {
-                            ImGui::OpenPopup("INVALID COURSE CODE");
                         }
-
-                        bool invalid_course_window = true;
-                        if (ImGui::BeginPopupModal("INVALID COURSE CODE",
-                                                   &invalid_course_window)) {
-                            ImGui::Text(
-                                    "THE COURSE CODE YOU ENTERED IS INVALID. PLEASE REFER TO THE HELPER MARK INDICATED "
-                                    "BY \"(?)\" FOR ADDITIONAL INSTRUCTIONS.");
-                            ImGui::EndPopup();
-                        }
-
                         ImGui::EndPopup();
                     }
 
@@ -677,7 +668,7 @@ static void glfw_error_callback(int error, const char *description) {
 static void HelpMarker(const char *desc) {
     ImGui::TextDisabled("(?)");
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort) && ImGui::BeginTooltip()) {
-        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 20.0f);
         ImGui::TextUnformatted(desc);
         ImGui::PopTextWrapPos();
         ImGui::EndTooltip();
