@@ -359,7 +359,6 @@ int main(int, char **) {
                     ImGui::SameLine();
                     HelpMarker(
                             "Only courses that haven't been created will be validated and allowed to be created. Valid course codes (e.g. MPM4UE, ICS4U, AVI2O) consist of 3 letters followed by a number course grade then a course difficulty).");
-                    //TODO: change course validation to call function
 
                     if (!std::regex_match(buf1, course_match)) {
                         ImGui::Text("INVALID COURSE CODE");
@@ -428,6 +427,7 @@ int main(int, char **) {
                             ImGui::TableNextColumn();
                             ImGui::Text("Grade");
                             ImGui::TableNextColumn();
+                            //TODO: add "add late" button
                             ImGui::Text("Number of Lates");
                             ImGui::TableNextColumn();
                             ImGui::Text("Address");
@@ -453,6 +453,7 @@ int main(int, char **) {
                                 ImGui::Text(student->getAddress().c_str());
                             }
                             ImGui::TableNextColumn();
+                            //TODO: support input of additional fields (first/last name, number of lates, grade, etc.)
                             if (ImGui::Button("Add Student to Course?"))
                                 isAddingStudentToCourse = true;
                             if (isAddingStudentToCourse)
@@ -502,7 +503,6 @@ int main(int, char **) {
                         ImGuiInputTextFlags_CharsUppercase |
                         ImGuiInputTextFlags_CallbackCharFilter,
                     TextFilters::FilterTeacherIDInput);  // Display some text (you can use a format strings too)
-            //TODO: implement password functionality
             ImGui::Text("Password");
             static char password[64] = "";
             string PWLabel;
@@ -544,6 +544,7 @@ int main(int, char **) {
                                     ImVec2(0.5f, 0.5f));
             // ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
             // ImGuiWindowFlags_NoCollapse
+            //TODO: support input of additional fields (first/last name, address, etc.)
             ImGui::Begin("Sign Up!", 0,
                          ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoResize);
             ImGui::Text("Teacher ID");
@@ -582,9 +583,6 @@ int main(int, char **) {
                     db.save();
                     ImGui::OpenPopup("ID CREATION SUCCESSFUL!");
                 }
-                // TODO: Check if password and confirm password are equal
-                // TODO: Validate account
-                // TODO: Save account info
             }
             bool account_creation_success_window = true;
             if (ImGui::BeginPopupModal("ID CREATION SUCCESSFUL!",
@@ -598,9 +596,6 @@ int main(int, char **) {
 
             if (ImGui::Button("Return To Log In Window")) {
                 show_log_in_window = true;
-                // TODO: Move to other window
-                // TODO: Create account info
-                // TODO: Save account info
             }
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
