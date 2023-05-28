@@ -1,10 +1,10 @@
 #include "Teacher.hpp"
 Teacher::Teacher() {}
 Teacher::Teacher(string first, string last) : Person{first, last}, courses{} {}
-Teacher::Teacher(string f, string l, string a, string t, string id)
-    : Person{f, l, a}, teachables{t}, employeeId{id}, courses{} {}
-Teacher::Teacher(string f, string l, string t, string id)
-    : Teacher{f, l, "", t, id} {}
+Teacher::Teacher(string f, string l, string a, string t, string id, string pw)
+    : Person{f, l, a}, teachables{t}, employeeId{id}, password{pw}, courses{} {}
+Teacher::Teacher(string f, string l, string t, string id, string pw)
+    : Teacher{f, l, "", t, id, pw} {}
 
 //Teacher::Teacher(const Teacher& other) {
 //    setFirstName(other.getFirstName());
@@ -38,6 +38,11 @@ void Teacher::setEmployeeId(string id) {
         employeeId = "invalid id";
 }
 string Teacher::getEmployeeId() const { return employeeId; }
+
+void Teacher::setPassword(string pw) {
+    password = pw;
+}
+string Teacher::getPassword() const { return password; }
 
 bool Teacher::isValidId(string id) {
     const int LENGTH_OF_VALID_IDS = 6;
