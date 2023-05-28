@@ -187,7 +187,10 @@ int main(int, char **) {
     //    bool show_another_window = false;
     //    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     string logged_in_employee;
-    bool valid_log_in = true;
+    bool valid_id = true;
+    bool valid_pw = true;
+    bool valid_id_sign_up = true;
+    bool valid_pw_sign_up = true;
     ImVec4 table_header_color = ImVec4(0.48f, 0.31f, 0.82f, 1.00f);
     int pwflags1 = ImGuiInputTextFlags_Password;
     bool showPW1 = false;
@@ -331,7 +334,6 @@ int main(int, char **) {
                     ImGui::EndPopup();
                 }
 
-                //TODO: add trailing "open" button to open unopened courses
                 if (ImGui::TabItemButton("+",
                                          ImGuiTabItemFlags_Trailing |
                                          ImGuiTabItemFlags_NoTooltip)) {
@@ -489,8 +491,13 @@ int main(int, char **) {
             ImGui::Begin("Log in!", 0, ImGuiCond_FirstUseEver);
             ImGui::Text("Teacher ID");
             static char buf1[64] = "";
+            string IDLabel;
+            if (valid_id)
+                IDLabel = "##a";
+            else
+                IDLabel = "INVALID ID";
             ImGui::InputText(
-                    "##a", buf1,
+                    IDLabel.c_str(), buf1,
                     64, ImGuiInputTextFlags_EnterReturnsTrue |
                         ImGuiInputTextFlags_CharsUppercase |
                         ImGuiInputTextFlags_CallbackCharFilter,
@@ -498,15 +505,26 @@ int main(int, char **) {
             //TODO: implement password functionality
             ImGui::Text("Password");
             static char password[64] = "";
-            ImGui::InputText("##b", password, IM_ARRAYSIZE(password), pwflags1);
+            string PWLabel;
+            if (valid_pw)
+                PWLabel = "##b";
+            else
+                PWLabel = "NON-MATCHING PW";
+            ImGui::InputText(PWLabel.c_str(), password, IM_ARRAYSIZE(password), pwflags1);
             ImGui::SameLine();
             ImGui::Checkbox("Show Password", &showPW1);
             if (ImGui::Button("Sign In")) {
+                valid_id = false;
+                valid_pw = false;
                 for (auto [employeeID, teacher]: db.getTeachers()) {
-                    if (employeeID == buf1) {
+                    if (employeeID == buf1 and teacher.getPassword() == password) {
                         logged_in_employee = buf1;
                         show_logged_in_window = true;
+                        valid_id = true;
+                        valid_pw = true;
                         break;
+                    }else if (employeeID == buf1){
+                        valid_id = true;
                     }
                 }
             }
@@ -530,27 +548,38 @@ int main(int, char **) {
                          ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoResize);
             ImGui::Text("Teacher ID");
             static char buf1[64] = "";
-            ImGui::InputText(
-                    "##a", buf1,
-                    64, ImGuiInputTextFlags_EnterReturnsTrue |
-                        ImGuiInputTextFlags_CharsUppercase |
-                        ImGuiInputTextFlags_CallbackCharFilter,
-                    TextFilters::FilterTeacherIDInput);  // Display some text (you can use a format strings too)
+            string IDLabel;
+            if (valid_id_sign_up)
+                IDLabel = "##a";
+            else
+                IDLabel = "INVALID ID";
+            ImGui::InputText(IDLabel.c_str(), buf1,64, ImGuiInputTextFlags_EnterReturnsTrue |ImGuiInputTextFlags_CharsUppercase |ImGuiInputTextFlags_CallbackCharFilter,TextFilters::FilterTeacherIDInput);  // Display some text (you can use a format strings too)
             ImGui::Text("Password");
             static char password2[64] = "";
-            ImGui::InputText("##b", password2, IM_ARRAYSIZE(password2),
+            string PWLabel1, PWLabel2;
+            if (valid_pw_sign_up) {
+                PWLabel1 = "##b";
+                PWLabel2 = "##c";
+            }else{
+                PWLabel1 = "NON-MATCHING PASSWORDS";
+                PWLabel2 = "NON-MATCHING PASSWORDS##";
+            }
+            ImGui::InputText(PWLabel1.c_str(), password2, IM_ARRAYSIZE(password2),
                              pwflags2);
             ImGui::SameLine();
             ImGui::Checkbox("Show Password", &showPW2);
             ImGui::Text("Confirm Password");
             static char password3[64] = "";
-            ImGui::InputText("##c", password3, IM_ARRAYSIZE(password3),
+            ImGui::InputText(PWLabel2.c_str(), password3, IM_ARRAYSIZE(password3),
                              pwflags3);
             ImGui::SameLine();
             ImGui::Checkbox("Show Password##", &showPW3);
             if (ImGui::Button("Sign Up")) {
-                if (validateInputTeacherID(buf1)) {
-                    db.addTeacher(Teacher("", "", "", buf1));
+                valid_id_sign_up = validateInputTeacherID(buf1);
+                valid_pw_sign_up = strcmp(password2, password3) == 0;
+                if (valid_id_sign_up and valid_pw_sign_up) {
+                    db.addTeacher(Teacher("", "", "", buf1, password2));
+                    db.save();
                     ImGui::OpenPopup("ID CREATION SUCCESSFUL!");
                 }
                 // TODO: Check if password and confirm password are equal
