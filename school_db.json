@@ -1,12 +1,16 @@
 {
 	"Courses" : 
 	{
+		"AMU4U-01" : 
+		{
+			"Teacher" : "C69696"
+		},
 		"ICS4U-01" : 
 		{
 			"Students" : 
 			[
-				"S123456789",
 				"S696969696",
+				"S123456789",
 				"S987654321"
 			],
 			"Teacher" : "C69696"
@@ -19,6 +23,14 @@
 				"S123456789"
 			],
 			"Teacher" : "C42042"
+		},
+		"SCH4UE-01" : 
+		{
+			"Students" : 
+			[
+				"S696969696"
+			],
+			"Teacher" : "C69696"
 		}
 	},
 	"Students" : 
@@ -53,7 +65,8 @@
 			"Address" : "",
 			"Courses" : 
 			[
-				"ICS4U-01"
+				"ICS4U-01",
+				"SCH4UE-01"
 			],
 			"First Name" : "Jonathan",
 			"Grade" : 99,
@@ -75,6 +88,15 @@
 	},
 	"Teachers" : 
 	{
+		"C12345" : 
+		{
+			"Address" : "",
+			"Courses" : [],
+			"First Name" : "",
+			"Last Name" : "",
+			"Password" : "yourmom",
+			"Teachables" : ""
+		},
 		"C42042" : 
 		{
 			"Address" : "",
@@ -84,6 +106,7 @@
 			],
 			"First Name" : "Andy",
 			"Last Name" : "Hughes",
+			"Password" : "goat",
 			"Teachables" : "MPM4UE"
 		},
 		"C69696" : 
@@ -91,10 +114,13 @@
 			"Address" : "",
 			"Courses" : 
 			[
-				"ICS4U-01"
+				"AMU4U-01",
+				"ICS4U-01",
+				"SCH4UE-01"
 			],
 			"First Name" : "Benjamin",
 			"Last Name" : "Hudson",
+			"Password" : "bennyhuddy",
 			"Teachables" : "ICS4U"
 		}
 	}
