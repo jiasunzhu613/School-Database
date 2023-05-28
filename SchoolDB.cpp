@@ -54,6 +54,7 @@ string SchoolDB::log(bool update) {
         for (auto [id, teacher] : teachers) {
             Json::Value& teacherJSON = ndb["Teachers"][id];
             teacherJSON["Teachables"] = teacher.getTeachables();
+            teacherJSON["Password"] = teacher.getPassword();
             teacherJSON["First Name"] = teacher.getFirstName();
             teacherJSON["Last Name"] = teacher.getLastName();
             teacherJSON["Address"] = teacher.getAddress();
