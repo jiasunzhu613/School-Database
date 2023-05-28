@@ -30,13 +30,14 @@ void JSONBackend::load(SchoolDB* inMemoryDB) {
         string firstName = teacherJSON["First Name"].asString();
         string lastName = teacherJSON["Last Name"].asString();
         string teachables = teacherJSON["Teachables"].asString();
+        string password = teacherJSON["Password"].asString();
         string address = teacherJSON["Address"].asString();
         if (address == "") {
             inMemoryDB->teachers[id] =
-                Teacher{firstName, lastName, teachables, id};
+                Teacher{firstName, lastName, teachables, id, password};
         } else
             inMemoryDB->teachers[id] =
-                Teacher{firstName, lastName, address, teachables, id};
+                Teacher{firstName, lastName, address, teachables, id, password};
     }
 
     for (const string courseCode : db["Courses"].getMemberNames()) {
@@ -89,6 +90,7 @@ void JSONBackend::save(SchoolDB* inMemoryDB) {
     for (auto [id, teacher] : inMemoryDB->teachers) {
         Json::Value& teacherJSON = ndb["Teachers"][id];
         teacherJSON["Teachables"] = teacher.getTeachables();
+        teacherJSON["Password"] = teacher.getPassword();
         teacherJSON["First Name"] = teacher.getFirstName();
         teacherJSON["Last Name"] = teacher.getLastName();
         teacherJSON["Address"] = teacher.getAddress();
