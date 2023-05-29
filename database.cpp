@@ -453,13 +453,16 @@ int main(int, char **) {
                                 ImGui::Text(student->getAddress().c_str());
                             }
                             ImGui::TableNextColumn();
+                            //TODO: support creation of students
                             //TODO: support input of additional fields (first/last name, number of lates, grade, etc.)
-                            if (ImGui::Button("Add Student to Course?"))
+                            if (ImGui::Button("Add Student to Course?")) {
                                 isAddingStudentToCourse = true;
+                                ImGui::SetNextWindowSize(ImVec2(400, 200));
+                                ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
+                                                        ImVec2(0.5f, 0.5f));
+                            }
                             if (isAddingStudentToCourse)
-                                addingStudentToCourse(
-                                        active_tabs[n],
-                                        isAddingStudentToCourse);
+                                addingStudentToCourse(active_tabs[n], isAddingStudentToCourse);
 
                             ImGui::EndTable();
                         }
@@ -693,44 +696,95 @@ void log() {
 }
 
 void addingStudentToCourse(string courseCode, bool &isCreatingStudent) {
+    std::unordered_set<Student*> students = db.getCourses()[courseCode].getStudents();
     ImGui::OpenPopup("Adding Student to Course");
-    if (ImGui::BeginPopupModal("Adding Student to Course",
-                               &isCreatingStudent)) {
-        const int buffSize = 11;
-        static char studentID[buffSize];
-        ImGui::InputText("Student ID", studentID, buffSize, ImGuiInputTextFlags_EnterReturnsTrue |
-                                                            ImGuiInputTextFlags_CharsUppercase |
-                                                            ImGuiInputTextFlags_CallbackCharFilter,
-                         TextFilters::FilterStudentIDInput);
-
-        if (db.getStudents().contains(string{studentID})) {
-            if (ImGui::Button("Submit")) {
-                Student &studentBeingAdded =
-                        db.getStudents().at(string{studentID});
-
-                db.getCourses()[courseCode].addStudentToClass(
-                        &studentBeingAdded);
-
-                unordered_set x = db.getCourses().at(courseCode).getStudents();
-                for (Student *student:
-                        db.getCourses().at(courseCode).getStudents()) {
-                    cout << student->getFirstName() << " "
-                         << student->getLastName() << endl;
-                    cout << student->getStudentId() << endl;
+    if (ImGui::BeginPopupModal("Adding Student to Course", &isCreatingStudent)) {
+        ImGui::Text("FILTER BY: ");
+        ImGui::SameLine(); static char buf1[64] = ""; ImGui::InputText("##a", buf1, IM_ARRAYSIZE(buf1), ImGuiInputTextFlags_EnterReturnsTrue);
+        vector<string> items{};
+        //filter/include students into list
+        std::regex student_list_match{fmt::format(R"(\b\w*{}\w*\b)", buf1), std::regex_constants::icase};
+        for (auto [studentID, student]: db.getStudents()) {
+            bool isInCourse = false;
+            for (Student* student : students){
+                if (student->getStudentId() == studentID) {
+                    isInCourse = true;
+                    break;
                 }
+            }
+            if (std::regex_search(student.toString(), student_list_match) and !isInCourse)
+                items.push_back(studentID);
+        }
+        static int item_current_idx = 0; // Here we store our selection data as an index.
+        // Custom size: use all width, 5 items tall
+        if (!items.empty())
+            ImGui::Text("UNADDED STUDENTS:");
+        else
+            ImGui::Text("ALL AVAILABLE STUDENTS HAVE ALREADY BEEN ADDED.");
+        if (ImGui::BeginListBox("##listbox",
+                                ImVec2(-FLT_MIN,
+                                       5 * ImGui::GetTextLineHeightWithSpacing()))) {
+            for (int n = 0; n < items.size(); n++) {
+                const bool is_selected = (item_current_idx == n);
+                if (ImGui::Selectable(items[n].c_str(), is_selected))
+                    item_current_idx = n;
+                if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort) && ImGui::BeginTooltip()) {
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 20.0f);
+                    ImGui::TextUnformatted(db.getStudents()[items[n]].toString().c_str());
+                    ImGui::PopTextWrapPos();
+                    ImGui::EndTooltip();
+                }
+
+                // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndListBox();
+        }
+        if (!items.empty()) {
+            if (ImGui::Button("OPEN")) {
+//                active_tabs.push_back(items[item_current_idx]);
+//                next_tab_id++;
                 isCreatingStudent = false;
-                for (char &c: studentID) c = '\0';
             }
         } else {
-            ImGui::Text("Student with this ID doesn't exist");
-            if (ImGui::Button("Quit?")) {
+            if (ImGui::Button("CLOSE"))
                 isCreatingStudent = false;
-                for (char &c: studentID) c = ' ';
-            }
         }
-
         ImGui::EndPopup();
     }
+//    if (ImGui::BeginPopupModal("Adding Student to Course",&isCreatingStudent)) {
+//        const int buffSize = 11;
+//        static char studentID[buffSize];
+//        ImGui::InputText("Student ID", studentID, buffSize, ImGuiInputTextFlags_EnterReturnsTrue |ImGuiInputTextFlags_CharsUppercase |ImGuiInputTextFlags_CallbackCharFilter,TextFilters::FilterStudentIDInput);
+//        if (db.getStudents().contains(string{studentID})) {
+//            if (ImGui::Button("Submit")) {
+//                Student &studentBeingAdded =
+//                        db.getStudents().at(string{studentID});
+//
+//                db.getCourses()[courseCode].addStudentToClass(
+//                        &studentBeingAdded);
+//
+//                unordered_set x = db.getCourses().at(courseCode).getStudents();
+//                for (Student *student:
+//                        db.getCourses().at(courseCode).getStudents()) {
+//                    cout << student->getFirstName() << " "
+//                         << student->getLastName() << endl;
+//                    cout << student->getStudentId() << endl;
+//                }
+//                isCreatingStudent = false;
+//                for (char &c: studentID) c = '\0';
+//            }
+//        } else {
+//            ImGui::Text("Student with this ID doesn't exist");
+//            if (ImGui::Button("Quit?")) {
+//                isCreatingStudent = false;
+//                for (char &c: studentID) c = ' ';
+//            }
+//        }
+//
+//        ImGui::EndPopup();
+//    }
 }
 
 bool validateInputTeacherID(string in) {
