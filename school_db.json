@@ -9,8 +9,8 @@
 		{
 			"Students" : 
 			[
-				"S696969696",
 				"S123456789",
+				"S696969696",
 				"S987654321"
 			],
 			"Teacher" : "C69696"
@@ -19,8 +19,8 @@
 		{
 			"Students" : 
 			[
-				"S420420420",
-				"S123456789"
+				"S123456789",
+				"S420420420"
 			],
 			"Teacher" : "C42042"
 		},
@@ -120,7 +120,7 @@
 			],
 			"First Name" : "Benjamin",
 			"Last Name" : "Hudson",
-			"Password" : "bennyhuddy",
+			"Password" : "1",
 			"Teachables" : "ICS4U"
 		}
 	}
