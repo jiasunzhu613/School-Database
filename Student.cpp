@@ -40,7 +40,12 @@ void Student::addToCourse(Course* course) {
 const unordered_set<Course*>& Student::getCourses() { return courses; }
 
 string Student::toString() {
-    return "Hi, I'm a student and my name is " + getFirstName() + " " +
-           getLastName() + " and I live at " + getAddress() + ". My ID is " +
-           studentId;
+    std::stringstream ss;
+    ss << "First name: " << getFirstName() << std::endl;
+    ss << "Last name: " << getLastName() << std::endl;
+    ss << "Address: " << getAddress() << std::endl;
+    ss << "Grade: " << getGrade() << std::endl;
+    ss << "Student ID: " << getStudentId() << std::endl;
+    ss << "Number of lates: " << getNumLates() << std::endl;
+    return ss.str();
 }
