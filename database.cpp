@@ -579,7 +579,7 @@ int main(int, char **) {
             if (valid_last_name_sign_up)
                 LNLabel = "##c";
             else
-                LNLabel = "REQUIRED";
+                LNLabel = "REQUIRED##";
             ImGui::InputText(LNLabel.c_str(), ln1,64);  // Display some text (you can use a format strings too)
 
             ImGui::Text("Address");
@@ -588,7 +588,7 @@ int main(int, char **) {
             if (valid_address_sign_up)
                 ALabel = "##d";
             else
-                ALabel = "REQUIRED";
+                ALabel = "REQUIRED####";
             ImGui::InputText(ALabel.c_str(), address1,64);  // Display some text (you can use a format strings too)
 
             ImGui::Text("Teachables"); //TODO: add helper marker for formating of input
@@ -628,22 +628,27 @@ int main(int, char **) {
                 valid_address_sign_up = strcmp(address1, "") != 0;
                 valid_teachables_sign_up = true;
                 //TODO: check single courses with no spaces
-                string s = teachables1 + ' ';
+                string s = teachables1;
                 std::string delimiter = " ";
                 size_t pos = 0;
                 std::string token;
-                if ((pos = s.find(delimiter)) == std::string::npos)
-                    valid_teachables_sign_up = std::regex_match(s, course_match);
-                else {
-                    while ((pos = s.find(delimiter)) != std::string::npos) {
-                        token = s.substr(0, pos);
-                        if (!std::regex_match(token, course_match)) {
-                            valid_teachables_sign_up = false;
-                            break;
-                        }
-                        s.erase(0, pos + delimiter.length());
+                while ((pos = s.find(delimiter)) != std::string::npos) {
+                    token = s.substr(0, pos);
+                    if (!std::regex_match(token, course_match)) {
+                        valid_teachables_sign_up = false;
+                        break;
                     }
+                    s.erase(0, pos + delimiter.length());
                 }
+                if (!std::regex_match(s, course_match)) {
+                    valid_teachables_sign_up = false;
+                }
+
+
+                /*
+                 * fkljsfkjsk
+                 * fkshfsj fjklsfjlkjs
+                 */
 
                 if (valid_id_sign_up and valid_pw_sign_up and valid_first_name_sign_up and valid_last_name_sign_up and valid_address_sign_up and valid_teachables_sign_up) {
                     db.addTeacher(Teacher(fn1, ln1, address1, teachables1, id1, password2));
@@ -859,9 +864,5 @@ void addingStudentToCourse(string courseCode, bool &isCreatingStudent) {
 bool validateInputTeacherID(string in) {
     if (!std::regex_match(in, teacher_match))
         return false;
-    for (auto [id, teacher]: db.getTeachers()) {
-        if (id == in)
-            return false;
-    }
-    return true;
+    return db.getTeachers().find(in) == db.getTeachers().end();
 }
