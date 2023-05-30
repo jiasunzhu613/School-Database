@@ -191,6 +191,10 @@ int main(int, char **) {
     bool valid_pw = true;
     bool valid_id_sign_up = true;
     bool valid_pw_sign_up = true;
+    bool valid_first_name_sign_up = true;
+    bool valid_last_name_sign_up = true;
+    bool valid_address_sign_up = true;
+    bool valid_teachables_sign_up = true;
     ImVec4 table_header_color = ImVec4(0.48f, 0.31f, 0.82f, 1.00f);
     int pwflags1 = ImGuiInputTextFlags_Password;
     bool showPW1 = false;
@@ -548,25 +552,63 @@ int main(int, char **) {
             // ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
             // ImGuiWindowFlags_NoCollapse
             //TODO: support input of additional fields (first/last name, address, etc.)
-            ImGui::Begin("Sign Up!", 0,
-                         ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoResize);
+            ImGui::Begin("Sign Up!", 0,ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoResize);
             ImGui::Text("Teacher ID");
-            static char buf1[64] = "";
+            static char id1 [64] = "";
             string IDLabel;
             if (valid_id_sign_up)
                 IDLabel = "##a";
             else
                 IDLabel = "INVALID ID";
-            ImGui::InputText(IDLabel.c_str(), buf1,64, ImGuiInputTextFlags_EnterReturnsTrue |ImGuiInputTextFlags_CharsUppercase |ImGuiInputTextFlags_CallbackCharFilter,TextFilters::FilterTeacherIDInput);  // Display some text (you can use a format strings too)
+            ImGui::InputText(IDLabel.c_str(), id1,64, ImGuiInputTextFlags_EnterReturnsTrue
+            |ImGuiInputTextFlags_CharsUppercase |ImGuiInputTextFlags_CallbackCharFilter,
+            TextFilters::FilterTeacherIDInput);  // Display some text (you can use a format strings too)
+
+            ImGui::Text("First Name");
+            static char fn1[64] = "";
+            string FNLabel;
+            if (valid_first_name_sign_up)
+                FNLabel = "##b";
+            else
+                FNLabel = "REQUIRED";
+            ImGui::InputText(FNLabel.c_str(), fn1,64);  // Display some text (you can use a format strings too)
+
+            ImGui::Text("Last Name");
+            static char ln1[64] = "";
+            string LNLabel;
+            if (valid_last_name_sign_up)
+                LNLabel = "##c";
+            else
+                LNLabel = "REQUIRED";
+            ImGui::InputText(LNLabel.c_str(), ln1,64);  // Display some text (you can use a format strings too)
+
+            ImGui::Text("Address");
+            static char address1[64] = "";
+            string ALabel;
+            if (valid_address_sign_up)
+                ALabel = "##d";
+            else
+                ALabel = "REQUIRED";
+            ImGui::InputText(ALabel.c_str(), address1,64);  // Display some text (you can use a format strings too)
+
+            ImGui::Text("Teachables"); //TODO: add helper marker for formating of input
+            static char teachables1[64] = "";
+            string TLabel;
+            if (valid_teachables_sign_up)
+                TLabel = "##e";
+            else
+                TLabel = "ONE OR MORE TEACHABLES DOES NOT FOLLOW VALID FORMATTING";
+            ImGui::InputText(TLabel.c_str(), teachables1,64);  // Display some text (you can use a format strings too)
+
             ImGui::Text("Password");
             static char password2[64] = "";
             string PWLabel1, PWLabel2;
             if (valid_pw_sign_up) {
-                PWLabel1 = "##b";
-                PWLabel2 = "##c";
+                PWLabel1 = "##f";
+                PWLabel2 = "##g";
             }else{
-                PWLabel1 = "NON-MATCHING PASSWORDS";
-                PWLabel2 = "NON-MATCHING PASSWORDS##";
+                PWLabel1 = "NON-MATCHING OR UNFILLED PASSWORDS ";
+                PWLabel2 = "NON-MATCHING OR UNFILLED PASSWORDS##";
             }
             ImGui::InputText(PWLabel1.c_str(), password2, IM_ARRAYSIZE(password2),
                              pwflags2);
@@ -579,10 +621,32 @@ int main(int, char **) {
             ImGui::SameLine();
             ImGui::Checkbox("Show Password##", &showPW3);
             if (ImGui::Button("Sign Up")) {
-                valid_id_sign_up = validateInputTeacherID(buf1);
-                valid_pw_sign_up = strcmp(password2, password3) == 0;
-                if (valid_id_sign_up and valid_pw_sign_up) {
-                    db.addTeacher(Teacher("", "", "", buf1, password2));
+                valid_id_sign_up = validateInputTeacherID(id1);
+                valid_pw_sign_up = (strcmp(password2, password3) == 0 and (strcmp(password2, "") != 0 and strcmp(password3, "") != 0));
+                valid_first_name_sign_up = strcmp(fn1, "") != 0;
+                valid_last_name_sign_up = strcmp(ln1, "") != 0;
+                valid_address_sign_up = strcmp(address1, "") != 0;
+                valid_teachables_sign_up = true;
+                //TODO: check single courses with no spaces
+                string s = teachables1 + ' ';
+                std::string delimiter = " ";
+                size_t pos = 0;
+                std::string token;
+                if ((pos = s.find(delimiter)) == std::string::npos)
+                    valid_teachables_sign_up = std::regex_match(s, course_match);
+                else {
+                    while ((pos = s.find(delimiter)) != std::string::npos) {
+                        token = s.substr(0, pos);
+                        if (!std::regex_match(token, course_match)) {
+                            valid_teachables_sign_up = false;
+                            break;
+                        }
+                        s.erase(0, pos + delimiter.length());
+                    }
+                }
+
+                if (valid_id_sign_up and valid_pw_sign_up and valid_first_name_sign_up and valid_last_name_sign_up and valid_address_sign_up and valid_teachables_sign_up) {
+                    db.addTeacher(Teacher(fn1, ln1, address1, teachables1, id1, password2));
                     db.save();
                     ImGui::OpenPopup("ID CREATION SUCCESSFUL!");
                 }
@@ -742,9 +806,14 @@ void addingStudentToCourse(string courseCode, bool &isCreatingStudent) {
             ImGui::EndListBox();
         }
         if (!items.empty()) {
-            if (ImGui::Button("OPEN")) {
+            if (ImGui::Button("ADD")) {
 //                active_tabs.push_back(items[item_current_idx]);
 //                next_tab_id++;
+                Student &studentBeingAdded =
+                        db.getStudents().at(string{items[item_current_idx]});
+
+                db.getCourses()[courseCode].addStudentToClass(
+                        &studentBeingAdded);
                 isCreatingStudent = false;
             }
         } else {
