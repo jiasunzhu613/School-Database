@@ -4,12 +4,14 @@
 
 #include <fmt/core.h>
 #include <stdio.h>
+
+#include <algorithm>
 #include <iostream>
 #include <regex>
 #include <string>
-#include <algorithm>
 #include <unordered_set>
 #include <vector>
+
 #include "SchoolDB.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -20,7 +22,7 @@
 #include "stb_image.h"
 
 using std::cout, std::cerr, std::cin, std::endl, std::unordered_set,
-        std::to_string, std::string, std::vector;
+    std::to_string, std::string, std::vector;
 
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -46,12 +48,12 @@ using std::cout, std::cerr, std::cin, std::endl, std::unordered_set,
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
 #endif
 
-//Declare global variables
+// Declare global variables
 SchoolDB db;
 std::regex course_match{"([A-Z]{3}([1-2]O|[1-4]C|[1-4]M|[1-4]UE|[1-4]U))"};
 std::regex teacher_match{"([A-Z]{1}\\d{5})"};
 std::regex student_match{"([A-Z]{1}\\d{9})"};
-//Teacher-related form submission validity
+// Teacher-related form submission validity
 bool valid_id = true;
 bool valid_pw = true;
 bool valid_id_sign_up = true;
@@ -61,7 +63,7 @@ bool valid_last_name_sign_up = true;
 bool valid_address_sign_up = true;
 bool valid_teachables_sign_up = true;
 
-//Student-related for submission validity
+// Student-related for submission validity
 bool valid_id_create = true;
 bool valid_first_name_create = true;
 bool valid_last_name_create = true;
@@ -69,47 +71,50 @@ bool valid_address_create = true;
 bool valid_grade_create = true;
 ImVec4 table_header_color = ImVec4(0.48f, 0.31f, 0.82f, 1.00f);
 
+// Student Table IDs
+enum StudentColumnID {
+    StudentColumnID_ID,
+    StudentColumnID_FirstName,
+    StudentColumnID_LastName,
+    StudentColumnID_Grade,
+    StudentColumnID_NumLates,
+    StudentColumnID_Address,
+};
+
 // Input filter
 struct TextFilters {
-    static int FilterCourseInput(
-            ImGuiInputTextCallbackData *data) {
+    static int FilterCourseInput(ImGuiInputTextCallbackData *data) {
         if (data->EventChar < 256 &&
             strchr("QWERTYUIOPASDFGHJKLZXCVBNMqwertyuio"
                    "pasdfghjklzxcvbnm1234",
-                   (char) data->EventChar))
+                   (char)data->EventChar))
             return 0;
         return 1;
     }
 
-    static int FilterTeacherIDInput(
-            ImGuiInputTextCallbackData *data) {
+    static int FilterTeacherIDInput(ImGuiInputTextCallbackData *data) {
         if (data->EventChar < 256 &&
-            strchr("Cc1234567890",
-                   (char) data->EventChar))
+            strchr("Cc1234567890", (char)data->EventChar))
             return 0;
         return 1;
     }
 
-    static int FilterStudentIDInput(
-            ImGuiInputTextCallbackData *data) {
+    static int FilterStudentIDInput(ImGuiInputTextCallbackData *data) {
         if (data->EventChar < 256 &&
-            strchr("Ss1234567890",
-                   (char) data->EventChar))
+            strchr("Ss1234567890", (char)data->EventChar))
             return 0;
         return 1;
     }
 
-    static int FilterGradeInput(
-            ImGuiInputTextCallbackData *data) {
+    static int FilterGradeInput(ImGuiInputTextCallbackData *data) {
         if (data->EventChar < 256 &&
-            strchr("1234567890",
-                   (char) data->EventChar))
+            strchr("1234567890", (char)data->EventChar))
             return 0;
         return 1;
     }
 };
 
-//Declare functions (initialized at the bottom of file)
+// Declare functions (initialized at the bottom of file)
 bool LoadTextureFromFile(const char *, GLuint *, int *, int *);
 
 static void glfw_error_callback(int, const char *);
@@ -124,8 +129,7 @@ bool validateInputStudentID(string);
 
 void addingStudentToCourse(string, bool &);
 
-void creatingStudent(bool&);
-
+void creatingStudent(bool &);
 
 // Main code
 int main(int, char **) {
@@ -135,10 +139,10 @@ int main(int, char **) {
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) return 1;
 
-    // Decide GL+GLSL versions
+        // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
     // GL ES 2.0 + GLSL 100
-    const char* glsl_version = "#version 100";
+    const char *glsl_version = "#version 100";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
@@ -151,7 +155,7 @@ int main(int, char **) {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);  // Required on Mac
 #else
     // GL 3.0 + GLSL 130
-    const char* glsl_version = "#version 130";
+    const char *glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+
@@ -160,7 +164,7 @@ int main(int, char **) {
 
     // Create window with graphics context
     GLFWwindow *window = glfwCreateWindow(
-            1280, 720, "Dear ImGui GLFW+OpenGL3 example", nullptr, nullptr);
+        1280, 720, "Dear ImGui GLFW+OpenGL3 example", nullptr, nullptr);
     if (window == nullptr) return 1;
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);  // Enable vsync
@@ -169,11 +173,11 @@ int main(int, char **) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
-    (void) io;
+    (void)io;
     io.ConfigFlags |=
-            ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+        ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
     io.ConfigFlags |=
-            ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+        ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -225,21 +229,23 @@ int main(int, char **) {
     bool showPW3 = false;
     bool show_log_in_window = true;
     bool show_logged_in_window = false;
-//    bool first_use = true;
-//
-//    int my_image_width = 0;
-//    int my_image_height = 0;
-//    GLuint my_image_texture = 0;
-//    bool ret = LoadTextureFromFile("../Images/plus_sign.png", &my_image_texture,
-//                                   &my_image_width, &my_image_height);
-//    IM_ASSERT(ret);
-//
-//    int my_image_width2 = 0;
-//    int my_image_height2 = 0;
-//    GLuint my_image_texture2 = 0;
-//    bool ret2 = LoadTextureFromFile("../Images/join.png", &my_image_texture2,
-//                                    &my_image_width2, &my_image_height2);
-//    IM_ASSERT(ret2);
+    //    bool first_use = true;
+    //
+    //    int my_image_width = 0;
+    //    int my_image_height = 0;
+    //    GLuint my_image_texture = 0;
+    //    bool ret = LoadTextureFromFile("../Images/plus_sign.png",
+    //    &my_image_texture,
+    //                                   &my_image_width, &my_image_height);
+    //    IM_ASSERT(ret);
+    //
+    //    int my_image_width2 = 0;
+    //    int my_image_height2 = 0;
+    //    GLuint my_image_texture2 = 0;
+    //    bool ret2 = LoadTextureFromFile("../Images/join.png",
+    //    &my_image_texture2,
+    //                                    &my_image_width2, &my_image_height2);
+    //    IM_ASSERT(ret2);
     bool isAddingStudentToCourse = false;
     bool isCreatingStudent = false;
     // Main loop
@@ -293,8 +299,9 @@ int main(int, char **) {
             static vector<std::string> active_tabs{};
             static int next_tab_id = 0;
             if (next_tab_id == 0) {
-                for (auto [courseCode, course]: db.getCourses()) {
-                    if (course.getTeacher()->getEmployeeId() == logged_in_employee) {
+                for (auto [courseCode, course] : db.getCourses()) {
+                    if (course.getTeacher()->getEmployeeId() ==
+                        logged_in_employee) {
                         active_tabs.push_back(courseCode);
                         next_tab_id++;
                     }
@@ -302,10 +309,10 @@ int main(int, char **) {
             }
 
             static ImGuiTabBarFlags tab_bar_flags =
-                    ImGuiTabBarFlags_AutoSelectNewTabs |
-                    ImGuiTabBarFlags_Reorderable |
-                    ImGuiTabBarFlags_FittingPolicyResizeDown |
-                    ImGuiTabBarFlags_TabListPopupButton;
+                ImGuiTabBarFlags_AutoSelectNewTabs |
+                ImGuiTabBarFlags_Reorderable |
+                ImGuiTabBarFlags_FittingPolicyResizeDown |
+                ImGuiTabBarFlags_TabListPopupButton;
 
             if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
                 // Demo Trailing Tabs: click the "+" button to add a new tab
@@ -313,37 +320,48 @@ int main(int, char **) {
                 // the "+") Note that we submit it before the regular tabs,
                 // but because of the ImGuiTabItemFlags_Trailing flag it
                 // will always appear at the end.
-                if (ImGui::TabItemButton("OPEN", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip)) {
+                if (ImGui::TabItemButton("OPEN",
+                                         ImGuiTabItemFlags_Trailing |
+                                             ImGuiTabItemFlags_NoTooltip)) {
                     ImGui::OpenPopup("OPEN COURSE");
                     ImGui::SetNextWindowSize(ImVec2(400, 200));
                     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
                                             ImVec2(0.5f, 0.5f));
                 }
                 bool open_course_window = true;
-                if (ImGui::BeginPopupModal("OPEN COURSE", &open_course_window)) {
+                if (ImGui::BeginPopupModal("OPEN COURSE",
+                                           &open_course_window)) {
                     vector<string> items{};
-                    for (auto [courseCode, course]: db.getCourses()) {
-                        if (find(active_tabs.begin(), active_tabs.end(), courseCode) == active_tabs.end() and
-                            course.getTeacher()->getEmployeeId() == logged_in_employee) {
+                    for (auto [courseCode, course] : db.getCourses()) {
+                        if (find(active_tabs.begin(), active_tabs.end(),
+                                 courseCode) == active_tabs.end() and
+                            course.getTeacher()->getEmployeeId() ==
+                                logged_in_employee) {
                             items.push_back(courseCode);
                         }
                     }
-                    static int item_current_idx = 0; // Here we store our selection data as an index.
+                    static int item_current_idx =
+                        0;  // Here we store our selection data as an index.
                     // Custom size: use all width, 5 items tall
                     if (!items.empty())
                         ImGui::Text("UNOPENED COURSES:");
                     else
-                        ImGui::Text("ALL AVAILABLE COURSES HAVE ALREADY BEEN OPENED.");
-                    if (ImGui::BeginListBox("##listbox",
-                                            ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing()))) {
+                        ImGui::Text(
+                            "ALL AVAILABLE COURSES HAVE ALREADY BEEN OPENED.");
+                    if (ImGui::BeginListBox(
+                            "##listbox",
+                            ImVec2(
+                                -FLT_MIN,
+                                5 * ImGui::GetTextLineHeightWithSpacing()))) {
                         for (int n = 0; n < items.size(); n++) {
                             const bool is_selected = (item_current_idx == n);
-                            if (ImGui::Selectable(items[n].c_str(), is_selected))
+                            if (ImGui::Selectable(items[n].c_str(),
+                                                  is_selected))
                                 item_current_idx = n;
 
-                            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                            if (is_selected)
-                                ImGui::SetItemDefaultFocus();
+                            // Set the initial focus when opening the combo
+                            // (scrolling + keyboard navigation focus)
+                            if (is_selected) ImGui::SetItemDefaultFocus();
                         }
                         ImGui::EndListBox();
                     }
@@ -353,16 +371,15 @@ int main(int, char **) {
                             next_tab_id++;
                             ImGui::CloseCurrentPopup();
                         }
-                    }else {
-                        if (ImGui::Button("CLOSE"))
-                            ImGui::CloseCurrentPopup();
+                    } else {
+                        if (ImGui::Button("CLOSE")) ImGui::CloseCurrentPopup();
                     }
                     ImGui::EndPopup();
                 }
 
                 if (ImGui::TabItemButton("+",
                                          ImGuiTabItemFlags_Trailing |
-                                         ImGuiTabItemFlags_NoTooltip)) {
+                                             ImGuiTabItemFlags_NoTooltip)) {
                     ImGui::OpenPopup("CREATE COURSE");
                     ImGui::SetNextWindowSize(ImVec2(400, 200));
                     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
@@ -374,32 +391,35 @@ int main(int, char **) {
                     ImGui::Text("COURSE ID");
 
                     static char buf1[64] = "";
-                    ImGui::InputText(
-                            "##a", buf1, 64,
-                            ImGuiInputTextFlags_EnterReturnsTrue |
-                            ImGuiInputTextFlags_CharsUppercase |
-                            ImGuiInputTextFlags_CallbackCharFilter,
-                            TextFilters::FilterCourseInput);
-                    // TODO: (might be too hard tbh) implement keyboard "enter" key detection and
-                    // allow enter to use the button (additional feature)
+                    ImGui::InputText("##a", buf1, 64,
+                                     ImGuiInputTextFlags_EnterReturnsTrue |
+                                         ImGuiInputTextFlags_CharsUppercase |
+                                         ImGuiInputTextFlags_CallbackCharFilter,
+                                     TextFilters::FilterCourseInput);
+                    // TODO: (might be too hard tbh) implement keyboard "enter"
+                    // key detection and allow enter to use the button
+                    // (additional feature)
                     ImGui::SameLine();
                     HelpMarker(
-                            "Only courses that haven't been created will be validated and allowed to be created. Valid course codes (e.g. MPM4UE, ICS4U, AVI2O) consist of 3 letters followed by a number course grade then a course difficulty).");
+                        "Only courses that haven't been created will be "
+                        "validated and allowed to be created. Valid course "
+                        "codes (e.g. MPM4UE, ICS4U, AVI2O) consist of 3 "
+                        "letters followed by a number course grade then a "
+                        "course difficulty).");
 
                     if (!std::regex_match(buf1, course_match)) {
                         ImGui::Text("INVALID COURSE CODE");
                     } else {
                         if (ImGui::Button("CREATE")) {
                             int count = 1;
-                            for (auto [courseCode, course]:
-                                    db.getCourses()) {
-                                if (buf1 == courseCode.substr(
-                                        0, courseCode.find('-')))
+                            for (auto [courseCode, course] : db.getCourses()) {
+                                if (buf1 ==
+                                    courseCode.substr(0, courseCode.find('-')))
                                     count += 1;
                             }
                             Teacher t;
-                            for (auto [employeeID, teacher]:
-                                    db.getTeachers()) {
+                            for (auto [employeeID, teacher] :
+                                 db.getTeachers()) {
                                 if (employeeID == logged_in_employee) {
                                     t = teacher;
                                     break;
@@ -409,8 +429,7 @@ int main(int, char **) {
                             Course c{&t, output, count, {}};
                             db.addCourse(c);
                             active_tabs.push_back(
-                                    fmt::format("{}-{:02}", output, count)
-                                            .c_str());
+                                fmt::format("{}-{:02}", output, count).c_str());
                             ImGui::CloseCurrentPopup();
                         }
                     }
@@ -426,56 +445,58 @@ int main(int, char **) {
                     if (ImGui::BeginTabItem(name, &open,
                                             ImGuiTabItemFlags_None)) {
                         if (ImGui::BeginTable(
-                                fmt::format("Students of {}",
-                                            active_tabs[n])
-                                        .c_str(),
+                                fmt::format("Students of {}", active_tabs[n])
+                                    .c_str(),
                                 6,
-                                ImGuiTableFlags_RowBg |
-                                ImGuiTableFlags_Borders |
-                                ImGuiTableFlags_BordersH |
-                                ImGuiTableFlags_BordersOuterH |
-                                ImGuiTableFlags_BordersInnerH |
-                                ImGuiTableFlags_BordersV |
-                                ImGuiTableFlags_BordersOuterV |
-                                ImGuiTableFlags_BordersInnerV |
-                                ImGuiTableFlags_BordersOuter |
-                                ImGuiTableFlags_BordersInner)) {
-                            ImGui::TableNextRow();
+                                ImGuiTableFlags_Sortable |
+                                    ImGuiTableFlags_SortMulti |
+                                    ImGuiTableFlags_RowBg |
+                                    ImGuiTableFlags_Borders |
+                                    ImGuiTableFlags_BordersH |
+                                    ImGuiTableFlags_BordersOuterH |
+                                    ImGuiTableFlags_BordersInnerH |
+                                    ImGuiTableFlags_BordersV |
+                                    ImGuiTableFlags_BordersOuterV |
+                                    ImGuiTableFlags_BordersInnerV |
+                                    ImGuiTableFlags_BordersOuter |
+                                    ImGuiTableFlags_BordersInner)) {
                             ImGui::TableSetBgColor(
-                                    ImGuiTableBgTarget_RowBg0,
-                                    ImGui::GetColorU32(table_header_color));
-                            ImGui::TableNextColumn();
-                            ImGui::Text("Student ID");
-                            ImGui::TableNextColumn();
-                            ImGui::Text("First Name");
-                            ImGui::TableNextColumn();
-                            ImGui::Text("Last Name");
-                            ImGui::TableNextColumn();
-                            ImGui::Text("Grade");
-                            ImGui::TableNextColumn();
-                            ImGui::Text("Number of Lates");
-                            ImGui::TableNextColumn();
-                            ImGui::Text("Address");
-                            for (auto student:
-                                    db.getCourses()[active_tabs[n]]
-                                            .getStudents()) {
+                                ImGuiTableBgTarget_RowBg0,
+                                ImGui::GetColorU32(table_header_color));
+                            ImGui::TableSetupColumn(
+                                "Student ID", ImGuiTableColumnFlags_DefaultSort,
+                                0.0f);
+                            ImGui::TableSetupColumn("First Name", 0, 0.0f);
+                            ImGui::TableSetupColumn("Last Name", 0, 0.0f);
+                            ImGui::TableSetupColumn("Grade", 0, 0.0f);
+                            ImGui::TableSetupColumn(
+                                "Number of Lates",
+                                ImGuiTableColumnFlags_PreferSortDescending,
+                                0.0f);
+                            ImGui::TableSetupColumn(
+                                "Address", ImGuiTableColumnFlags_NoSort, 0.0f);
+
+                            ImGui::TableHeadersRow();
+                            ImGui::TableNextRow();
+                            for (auto student : db.getCourses()[active_tabs[n]]
+                                                    .getStudents()) {
                                 ImGui::TableNextColumn();
-                                ImGui::Text(
-                                        student->getStudentId().c_str());
+                                ImGui::Text(student->getStudentId().c_str());
                                 ImGui::TableNextColumn();
-                                ImGui::Text(
-                                        student->getFirstName().c_str());
+                                ImGui::Text(student->getFirstName().c_str());
                                 ImGui::TableNextColumn();
                                 ImGui::Text(student->getLastName().c_str());
                                 ImGui::TableNextColumn();
                                 ImGui::Text(
-                                        to_string(student->getGrade()).c_str());
+                                    to_string(student->getGrade()).c_str());
                                 ImGui::TableNextColumn();
                                 ImGui::Text(
-                                        to_string(student->getNumLates())
-                                                .c_str());
+                                    to_string(student->getNumLates()).c_str());
                                 ImGui::SameLine();
-                                if (ImGui::Button(fmt::format("+##{}", student->getStudentId()).c_str())){
+                                if (ImGui::Button(
+                                        fmt::format("+##{}",
+                                                    student->getStudentId())
+                                            .c_str())) {
                                     student->addLate();
                                 }
                                 ImGui::TableNextColumn();
@@ -485,16 +506,19 @@ int main(int, char **) {
                             if (ImGui::Button("Add Student to Course?")) {
                                 isAddingStudentToCourse = true;
                                 ImGui::SetNextWindowSize(ImVec2(400, 200));
-                                ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
+                                ImGui::SetNextWindowPos(center,
+                                                        ImGuiCond_Appearing,
                                                         ImVec2(0.5f, 0.5f));
                             }
                             if (isAddingStudentToCourse)
-                                addingStudentToCourse(active_tabs[n], isAddingStudentToCourse);
+                                addingStudentToCourse(active_tabs[n],
+                                                      isAddingStudentToCourse);
 
                             if (ImGui::Button("Create Student?")) {
                                 isCreatingStudent = true;
                                 ImGui::SetNextWindowSize(ImVec2(400, 200));
-                                ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
+                                ImGui::SetNextWindowPos(center,
+                                                        ImGuiCond_Appearing,
                                                         ImVec2(0.5f, 0.5f));
                             }
                             if (isCreatingStudent)
@@ -516,8 +540,8 @@ int main(int, char **) {
             }
             ImGui::End();
         }
-            // 2. Show a simple window that we create ourselves. We use a Begin/End
-            // pair to create a named window.
+        // 2. Show a simple window that we create ourselves. We use a Begin/End
+        // pair to create a named window.
         else if (show_log_in_window) {
             static float f = 0.0f;
             static int counter = 0;
@@ -536,11 +560,13 @@ int main(int, char **) {
             else
                 IDLabel = "INVALID ID";
             ImGui::InputText(
-                    IDLabel.c_str(), buf1,
-                    64, ImGuiInputTextFlags_EnterReturnsTrue |
-                        ImGuiInputTextFlags_CharsUppercase |
-                        ImGuiInputTextFlags_CallbackCharFilter,
-                    TextFilters::FilterTeacherIDInput);  // Display some text (you can use a format strings too)
+                IDLabel.c_str(), buf1, 64,
+                ImGuiInputTextFlags_EnterReturnsTrue |
+                    ImGuiInputTextFlags_CharsUppercase |
+                    ImGuiInputTextFlags_CallbackCharFilter,
+                TextFilters::FilterTeacherIDInput);  // Display some text (you
+                                                     // can use a format strings
+                                                     // too)
             ImGui::Text("Password");
             static char password[64] = "";
             string PWLabel;
@@ -548,20 +574,22 @@ int main(int, char **) {
                 PWLabel = "##b";
             else
                 PWLabel = "NON-MATCHING PW";
-            ImGui::InputText(PWLabel.c_str(), password, IM_ARRAYSIZE(password), pwflags1);
+            ImGui::InputText(PWLabel.c_str(), password, IM_ARRAYSIZE(password),
+                             pwflags1);
             ImGui::SameLine();
             ImGui::Checkbox("Show Password", &showPW1);
             if (ImGui::Button("Sign In")) {
                 valid_id = false;
                 valid_pw = false;
-                for (auto [employeeID, teacher]: db.getTeachers()) {
-                    if (employeeID == buf1 and teacher.getPassword() == password) {
+                for (auto [employeeID, teacher] : db.getTeachers()) {
+                    if (employeeID == buf1 and
+                        teacher.getPassword() == password) {
                         logged_in_employee = buf1;
                         show_logged_in_window = true;
                         valid_id = true;
                         valid_pw = true;
                         break;
-                    }else if (employeeID == buf1){
+                    } else if (employeeID == buf1) {
                         valid_id = true;
                     }
                 }
@@ -582,17 +610,23 @@ int main(int, char **) {
                                     ImVec2(0.5f, 0.5f));
             // ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
             // ImGuiWindowFlags_NoCollapse
-            ImGui::Begin("Sign Up!", 0,ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoResize);
+            ImGui::Begin("Sign Up!", 0,
+                         ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoResize);
             ImGui::Text("Teacher ID");
-            static char id1 [64] = "";
+            static char id1[64] = "";
             string IDLabel;
             if (valid_id_sign_up)
                 IDLabel = "##a";
             else
                 IDLabel = "INVALID ID";
-            ImGui::InputText(IDLabel.c_str(), id1,64, ImGuiInputTextFlags_EnterReturnsTrue
-            |ImGuiInputTextFlags_CharsUppercase |ImGuiInputTextFlags_CallbackCharFilter,
-            TextFilters::FilterTeacherIDInput);  // Display some text (you can use a format strings too)
+            ImGui::InputText(
+                IDLabel.c_str(), id1, 64,
+                ImGuiInputTextFlags_EnterReturnsTrue |
+                    ImGuiInputTextFlags_CharsUppercase |
+                    ImGuiInputTextFlags_CallbackCharFilter,
+                TextFilters::FilterTeacherIDInput);  // Display some text (you
+                                                     // can use a format strings
+                                                     // too)
             ImGui::NewLine();
 
             ImGui::Text("First Name");
@@ -602,7 +636,9 @@ int main(int, char **) {
                 FNLabel = "##b";
             else
                 FNLabel = "REQUIRED";
-            ImGui::InputText(FNLabel.c_str(), fn1,64);  // Display some text (you can use a format strings too)
+            ImGui::InputText(
+                FNLabel.c_str(), fn1,
+                64);  // Display some text (you can use a format strings too)
             ImGui::NewLine();
 
             ImGui::Text("Last Name");
@@ -612,7 +648,9 @@ int main(int, char **) {
                 LNLabel = "##c";
             else
                 LNLabel = "REQUIRED##a";
-            ImGui::InputText(LNLabel.c_str(), ln1,64);  // Display some text (you can use a format strings too)
+            ImGui::InputText(
+                LNLabel.c_str(), ln1,
+                64);  // Display some text (you can use a format strings too)
             ImGui::NewLine();
 
             ImGui::Text("Address");
@@ -622,18 +660,26 @@ int main(int, char **) {
                 ALabel = "##d";
             else
                 ALabel = "REQUIRED##b";
-            ImGui::InputText(ALabel.c_str(), address1,64);  // Display some text (you can use a format strings too)
+            ImGui::InputText(
+                ALabel.c_str(), address1,
+                64);  // Display some text (you can use a format strings too)
             ImGui::NewLine();
 
             ImGui::Text("Teachables");
-            ImGui::SameLine(); HelpMarker("Each course listed as teachables must follow valid course code criterions and be separated by a space.");
+            ImGui::SameLine();
+            HelpMarker(
+                "Each course listed as teachables must follow valid course "
+                "code criterions and be separated by a space.");
             static char teachables1[64] = "";
             string TLabel;
             if (valid_teachables_sign_up)
                 TLabel = "##e";
             else
-                TLabel = "ONE OR MORE TEACHABLES DOES NOT FOLLOW VALID FORMATTING";
-            ImGui::InputText(TLabel.c_str(), teachables1,64);  // Display some text (you can use a format strings too)
+                TLabel =
+                    "ONE OR MORE TEACHABLES DOES NOT FOLLOW VALID FORMATTING";
+            ImGui::InputText(
+                TLabel.c_str(), teachables1,
+                64);  // Display some text (you can use a format strings too)
             ImGui::NewLine();
 
             ImGui::Text("Password");
@@ -642,27 +688,29 @@ int main(int, char **) {
             if (valid_pw_sign_up) {
                 PWLabel1 = "##f";
                 PWLabel2 = "##g";
-            }else{
+            } else {
                 PWLabel1 = "NON-MATCHING OR UNFILLED PASSWORDS ";
                 PWLabel2 = "NON-MATCHING OR UNFILLED PASSWORDS##";
             }
-            ImGui::InputText(PWLabel1.c_str(), password2, IM_ARRAYSIZE(password2),
-                             pwflags2);
+            ImGui::InputText(PWLabel1.c_str(), password2,
+                             IM_ARRAYSIZE(password2), pwflags2);
             ImGui::SameLine();
             ImGui::Checkbox("Show Password", &showPW2);
             ImGui::NewLine();
 
             ImGui::Text("Confirm Password");
             static char password3[64] = "";
-            ImGui::InputText(PWLabel2.c_str(), password3, IM_ARRAYSIZE(password3),
-                             pwflags3);
+            ImGui::InputText(PWLabel2.c_str(), password3,
+                             IM_ARRAYSIZE(password3), pwflags3);
             ImGui::SameLine();
             ImGui::Checkbox("Show Password##", &showPW3);
             ImGui::NewLine();
 
             if (ImGui::Button("Sign Up")) {
                 valid_id_sign_up = validateInputTeacherID(id1);
-                valid_pw_sign_up = (strcmp(password2, password3) == 0 and (strcmp(password2, "") != 0 and strcmp(password3, "") != 0));
+                valid_pw_sign_up = (strcmp(password2, password3) == 0 and
+                                    (strcmp(password2, "") != 0 and
+                                     strcmp(password3, "") != 0));
                 valid_first_name_sign_up = strcmp(fn1, "") != 0;
                 valid_last_name_sign_up = strcmp(ln1, "") != 0;
                 valid_address_sign_up = strcmp(address1, "") != 0;
@@ -684,8 +732,11 @@ int main(int, char **) {
                     valid_teachables_sign_up = false;
                 }
 
-                if (valid_id_sign_up and valid_pw_sign_up and valid_first_name_sign_up and valid_last_name_sign_up and valid_address_sign_up and valid_teachables_sign_up) {
-                    db.addTeacher(Teacher{fn1, ln1, address1, teachables1, id1, password2});
+                if (valid_id_sign_up and valid_pw_sign_up and
+                    valid_first_name_sign_up and valid_last_name_sign_up and
+                    valid_address_sign_up and valid_teachables_sign_up) {
+                    db.addTeacher(Teacher{fn1, ln1, address1, teachables1, id1,
+                                          password2});
                     db.save();
                     ImGui::OpenPopup("ID CREATION SUCCESSFUL!");
                 }
@@ -694,8 +745,8 @@ int main(int, char **) {
             if (ImGui::BeginPopupModal("ID CREATION SUCCESSFUL!",
                                        &account_creation_success_window)) {
                 ImGui::Text(
-                        "YOUR ID HAS BEEN SUCCESSFULLY CREATED. \nLOG IN "
-                        "THROUGH THE LOG IN WINDOW!");
+                    "YOUR ID HAS BEEN SUCCESSFULLY CREATED. \nLOG IN "
+                    "THROUGH THE LOG IN WINDOW!");
                 ImGui::EndPopup();
             }
             if (!account_creation_success_window) show_log_in_window = true;
@@ -746,7 +797,7 @@ bool LoadTextureFromFile(const char *filename, GLuint *out_texture,
     int image_width = 0;
     int image_height = 0;
     unsigned char *image_data =
-            stbi_load(filename, &image_width, &image_height, NULL, 4);
+        stbi_load(filename, &image_width, &image_height, NULL, 4);
     if (image_data == NULL) return false;
 
     // Create a OpenGL texture identifier
@@ -784,7 +835,8 @@ static void glfw_error_callback(int error, const char *description) {
 
 static void HelpMarker(const char *desc) {
     ImGui::TextDisabled("(?)");
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort) && ImGui::BeginTooltip()) {
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort) &&
+        ImGui::BeginTooltip()) {
         ImGui::PushTextWrapPos(ImGui::GetFontSize() * 20.0f);
         ImGui::TextUnformatted(desc);
         ImGui::PopTextWrapPos();
@@ -799,106 +851,120 @@ void log() {
 }
 
 void addingStudentToCourse(string courseCode, bool &isCreatingStudent) {
-    std::unordered_set<Student*> students = db.getCourses()[courseCode].getStudents();
+    std::unordered_set<Student *> students =
+        db.getCourses()[courseCode].getStudents();
     ImGui::OpenPopup("Adding Student to Course");
-    if (ImGui::BeginPopupModal("Adding Student to Course", &isCreatingStudent)) {
+    if (ImGui::BeginPopupModal("Adding Student to Course",
+                               &isCreatingStudent)) {
         ImGui::Text("FILTER BY: ");
-        ImGui::SameLine(); static char buf1[64] = ""; ImGui::InputText("##a", buf1, IM_ARRAYSIZE(buf1), ImGuiInputTextFlags_EnterReturnsTrue);
+        ImGui::SameLine();
+        static char buf1[64] = "";
+        ImGui::InputText("##a", buf1, IM_ARRAYSIZE(buf1),
+                         ImGuiInputTextFlags_EnterReturnsTrue);
         vector<string> items{};
-        //filter/include students into list
-        std::regex student_list_match{fmt::format(R"(\b\w*{}\w*\b)", buf1), std::regex_constants::icase};
-        for (auto [studentID, student]: db.getStudents()) {
+        // filter/include students into list
+        std::regex student_list_match{fmt::format(R"(\b\w*{}\w*\b)", buf1),
+                                      std::regex_constants::icase};
+        for (auto [studentID, student] : db.getStudents()) {
             bool isInCourse = false;
-            for (Student* student : students){
+            for (Student *student : students) {
                 if (student->getStudentId() == studentID) {
                     isInCourse = true;
                     break;
                 }
             }
-            if (std::regex_search(student.toString(), student_list_match) and !isInCourse)
+            if (std::regex_search(student.toString(), student_list_match) and
+                !isInCourse)
                 items.push_back(studentID);
         }
-        static int item_current_idx = 0; // Here we store our selection data as an index.
+        static int item_current_idx =
+            0;  // Here we store our selection data as an index.
         // Custom size: use all width, 5 items tall
         if (!items.empty())
             ImGui::Text("UNADDED STUDENTS:");
         else
             ImGui::Text("ALL AVAILABLE STUDENTS HAVE ALREADY BEEN ADDED.");
-        if (ImGui::BeginListBox("##listbox",
-                                ImVec2(-FLT_MIN,
-                                       5 * ImGui::GetTextLineHeightWithSpacing()))) {
+        if (ImGui::BeginListBox(
+                "##listbox",
+                ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing()))) {
             for (int n = 0; n < items.size(); n++) {
                 const bool is_selected = (item_current_idx == n);
                 if (ImGui::Selectable(items[n].c_str(), is_selected))
                     item_current_idx = n;
-                if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort) && ImGui::BeginTooltip()) {
+                if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort) &&
+                    ImGui::BeginTooltip()) {
                     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 20.0f);
-                    ImGui::TextUnformatted(db.getStudents()[items[n]].toString().c_str());
+                    ImGui::TextUnformatted(
+                        db.getStudents()[items[n]].toString().c_str());
                     ImGui::PopTextWrapPos();
                     ImGui::EndTooltip();
                 }
 
-                // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                if (is_selected)
-                    ImGui::SetItemDefaultFocus();
+                // Set the initial focus when opening the combo (scrolling +
+                // keyboard navigation focus)
+                if (is_selected) ImGui::SetItemDefaultFocus();
             }
             ImGui::EndListBox();
         }
         if (!items.empty()) {
             if (ImGui::Button("ADD")) {
-//                active_tabs.push_back(items[item_current_idx]);
-//                next_tab_id++;
+                //                active_tabs.push_back(items[item_current_idx]);
+                //                next_tab_id++;
                 Student &studentBeingAdded =
-                        db.getStudents().at(string{items[item_current_idx]});
+                    db.getStudents().at(string{items[item_current_idx]});
 
                 db.getCourses()[courseCode].addStudentToClass(
-                        &studentBeingAdded);
+                    &studentBeingAdded);
                 isCreatingStudent = false;
             }
         } else {
-            if (ImGui::Button("CLOSE"))
-                isCreatingStudent = false;
+            if (ImGui::Button("CLOSE")) isCreatingStudent = false;
         }
         ImGui::EndPopup();
     }
-//    if (ImGui::BeginPopupModal("Adding Student to Course",&isCreatingStudent)) {
-//        const int buffSize = 11;
-//        static char studentID[buffSize];
-//        ImGui::InputText("Student ID", studentID, buffSize, ImGuiInputTextFlags_EnterReturnsTrue |ImGuiInputTextFlags_CharsUppercase |ImGuiInputTextFlags_CallbackCharFilter,TextFilters::FilterStudentIDInput);
-//        if (db.getStudents().contains(string{studentID})) {
-//            if (ImGui::Button("Submit")) {
-//                Student &studentBeingAdded =
-//                        db.getStudents().at(string{studentID});
-//
-//                db.getCourses()[courseCode].addStudentToClass(
-//                        &studentBeingAdded);
-//
-//                unordered_set x = db.getCourses().at(courseCode).getStudents();
-//                for (Student *student:
-//                        db.getCourses().at(courseCode).getStudents()) {
-//                    cout << student->getFirstName() << " "
-//                         << student->getLastName() << endl;
-//                    cout << student->getStudentId() << endl;
-//                }
-//                isCreatingStudent = false;
-//                for (char &c: studentID) c = '\0';
-//            }
-//        } else {
-//            ImGui::Text("Student with this ID doesn't exist");
-//            if (ImGui::Button("Quit?")) {
-//                isCreatingStudent = false;
-//                for (char &c: studentID) c = ' ';
-//            }
-//        }
-//
-//        ImGui::EndPopup();
-//    }
+    //    if (ImGui::BeginPopupModal("Adding Student to
+    //    Course",&isCreatingStudent)) {
+    //        const int buffSize = 11;
+    //        static char studentID[buffSize];
+    //        ImGui::InputText("Student ID", studentID, buffSize,
+    //        ImGuiInputTextFlags_EnterReturnsTrue
+    //        |ImGuiInputTextFlags_CharsUppercase
+    //        |ImGuiInputTextFlags_CallbackCharFilter,TextFilters::FilterStudentIDInput);
+    //        if (db.getStudents().contains(string{studentID})) {
+    //            if (ImGui::Button("Submit")) {
+    //                Student &studentBeingAdded =
+    //                        db.getStudents().at(string{studentID});
+    //
+    //                db.getCourses()[courseCode].addStudentToClass(
+    //                        &studentBeingAdded);
+    //
+    //                unordered_set x =
+    //                db.getCourses().at(courseCode).getStudents(); for (Student
+    //                *student:
+    //                        db.getCourses().at(courseCode).getStudents()) {
+    //                    cout << student->getFirstName() << " "
+    //                         << student->getLastName() << endl;
+    //                    cout << student->getStudentId() << endl;
+    //                }
+    //                isCreatingStudent = false;
+    //                for (char &c: studentID) c = '\0';
+    //            }
+    //        } else {
+    //            ImGui::Text("Student with this ID doesn't exist");
+    //            if (ImGui::Button("Quit?")) {
+    //                isCreatingStudent = false;
+    //                for (char &c: studentID) c = ' ';
+    //            }
+    //        }
+    //
+    //        ImGui::EndPopup();
+    //    }
 }
 
 void creatingStudent(bool &isCreatingStudent) {
     ImGui::OpenPopup("Creating Student");
     if (ImGui::BeginPopupModal("Creating Student", &isCreatingStudent)) {
-        //Student ID
+        // Student ID
         ImGui::Text("Student ID");
         static char id1[64] = "";
         string IDLabel;
@@ -906,13 +972,16 @@ void creatingStudent(bool &isCreatingStudent) {
             IDLabel = "##a";
         else
             IDLabel = "INVALID ID";
-        ImGui::InputText(IDLabel.c_str(), id1, 64, ImGuiInputTextFlags_EnterReturnsTrue
-                                                   | ImGuiInputTextFlags_CharsUppercase |
-                                                   ImGuiInputTextFlags_CallbackCharFilter,
-                         TextFilters::FilterStudentIDInput);  // Display some text (you can use a format strings too)
+        ImGui::InputText(
+            IDLabel.c_str(), id1, 64,
+            ImGuiInputTextFlags_EnterReturnsTrue |
+                ImGuiInputTextFlags_CharsUppercase |
+                ImGuiInputTextFlags_CallbackCharFilter,
+            TextFilters::FilterStudentIDInput);  // Display some text (you can
+                                                 // use a format strings too)
         ImGui::NewLine();
 
-        //First name
+        // First name
         ImGui::Text("First Name");
         static char fn1[64] = "";
         string FNLabel;
@@ -920,10 +989,12 @@ void creatingStudent(bool &isCreatingStudent) {
             FNLabel = "##b";
         else
             FNLabel = "REQUIRED";
-        ImGui::InputText(FNLabel.c_str(), fn1, 64);  // Display some text (you can use a format strings too)
+        ImGui::InputText(
+            FNLabel.c_str(), fn1,
+            64);  // Display some text (you can use a format strings too)
         ImGui::NewLine();
 
-        //Last name
+        // Last name
         ImGui::Text("Last Name");
         static char ln1[64] = "";
         string LNLabel;
@@ -931,10 +1002,12 @@ void creatingStudent(bool &isCreatingStudent) {
             LNLabel = "##c";
         else
             LNLabel = "REQUIRED##a";
-        ImGui::InputText(LNLabel.c_str(), ln1, 64);  // Display some text (you can use a format strings too)
+        ImGui::InputText(
+            LNLabel.c_str(), ln1,
+            64);  // Display some text (you can use a format strings too)
         ImGui::NewLine();
 
-        //Address
+        // Address
         ImGui::Text("Address");
         static char address1[64] = "";
         string ALabel;
@@ -942,10 +1015,12 @@ void creatingStudent(bool &isCreatingStudent) {
             ALabel = "##d";
         else
             ALabel = "REQUIRED##b";
-        ImGui::InputText(ALabel.c_str(), address1, 64);  // Display some text (you can use a format strings too)
+        ImGui::InputText(
+            ALabel.c_str(), address1,
+            64);  // Display some text (you can use a format strings too)
         ImGui::NewLine();
 
-        //Grade
+        // Grade
         ImGui::Text("Grade");
         static char grade[64] = "";
         string GLabel;
@@ -953,8 +1028,10 @@ void creatingStudent(bool &isCreatingStudent) {
             GLabel = "##e";
         else
             GLabel = "REQUIRED##c";
-        ImGui::InputText(GLabel.c_str(), grade, 64, ImGuiInputTextFlags_CallbackCharFilter,
-                         TextFilters::FilterGradeInput);  // Display some text (you can use a format strings too)
+        ImGui::InputText(
+            GLabel.c_str(), grade, 64, ImGuiInputTextFlags_CallbackCharFilter,
+            TextFilters::FilterGradeInput);  // Display some text (you can use a
+                                             // format strings too)
         ImGui::NewLine();
 
         if (ImGui::Button("Create")) {
@@ -964,8 +1041,11 @@ void creatingStudent(bool &isCreatingStudent) {
             valid_address_create = strcmp(address1, "") != 0;
             valid_grade_create = strcmp(grade, "") != 0;
 
-            if (valid_id_create and valid_first_name_create and valid_last_name_create and valid_address_create and valid_grade_create) {
-                db.addStudent(Student{fn1, ln1, address1, std::stoi(grade), id1});
+            if (valid_id_create and valid_first_name_create and
+                valid_last_name_create and valid_address_create and
+                valid_grade_create) {
+                db.addStudent(
+                    Student{fn1, ln1, address1, std::stoi(grade), id1});
                 db.save();
                 ImGui::OpenPopup("STUDENT CREATION SUCCESSFUL!");
                 isCreatingStudent = false;
@@ -975,7 +1055,8 @@ void creatingStudent(bool &isCreatingStudent) {
         if (ImGui::BeginPopupModal("STUDENT CREATION SUCCESSFUL!",
                                    &account_creation_success_window)) {
             ImGui::Text(
-                    "STUDENT HAS BEEN SUCCESSFULLY CREATED. \n ADD STUDENT TO COURSE USING THE \"ADDING STUDENT TO COURSE?\" BUTTON");
+                "STUDENT HAS BEEN SUCCESSFULLY CREATED. \n ADD STUDENT TO "
+                "COURSE USING THE \"ADDING STUDENT TO COURSE?\" BUTTON");
             ImGui::EndPopup();
         }
         ImGui::EndPopup();
@@ -983,13 +1064,11 @@ void creatingStudent(bool &isCreatingStudent) {
 }
 
 bool validateInputTeacherID(string in) {
-    if (!std::regex_match(in, teacher_match))
-        return false;
+    if (!std::regex_match(in, teacher_match)) return false;
     return db.getTeachers().find(in) == db.getTeachers().end();
 }
 
 bool validateInputStudentID(string in) {
-    if (!std::regex_match(in, student_match))
-        return false;
+    if (!std::regex_match(in, student_match)) return false;
     return db.getStudents().find(in) == db.getStudents().end();
 }

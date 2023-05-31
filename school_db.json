@@ -40,8 +40,8 @@
 			"Address" : "",
 			"Courses" : 
 			[
-				"ICS4U-01",
-				"MPM4UE-01"
+				"MPM4UE-01",
+				"ICS4U-01"
 			],
 			"First Name" : "William",
 			"Grade" : 69,
@@ -65,8 +65,8 @@
 			"Address" : "",
 			"Courses" : 
 			[
-				"ICS4U-01",
-				"SCH4UE-01"
+				"SCH4UE-01",
+				"ICS4U-01"
 			],
 			"First Name" : "Jonathan",
 			"Grade" : 99,
@@ -114,9 +114,9 @@
 			"Address" : "",
 			"Courses" : 
 			[
-				"AMU4U-01",
+				"SCH4UE-01",
 				"ICS4U-01",
-				"SCH4UE-01"
+				"AMU4U-01"
 			],
 			"First Name" : "Benjamin",
 			"Last Name" : "Hudson",

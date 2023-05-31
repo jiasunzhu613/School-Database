@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake)
 project(School-Database VERSION 0.1.0)
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++23")
+
+# set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++23")
 set(CMAKE_CXX_STANDARD 20)
 
 include(CTest)
@@ -10,13 +11,15 @@ enable_testing()
 
 set(PRJ_HEADERS Person.hpp Student.hpp Teacher.hpp Course.hpp JSONBackend.hpp SchoolDB.hpp)
 set(PRJ_SOURCES Person.cpp Student.cpp Teacher.cpp Course.cpp JSONBackend.cpp SchoolDB.cpp)
+
 set(PRJ_MAIN database.cpp)
-#set(PRJ_MAIN main.cpp)
-#set(PRJ_MAIN jsonTester.cpp)
+
+# set(PRJ_MAIN main.cpp)
+
+# set(PRJ_MAIN jsonTester.cpp)
 add_executable(${PROJECT_NAME} ${PRJ_HEADERS} ${PRJ_SOURCES} ${PRJ_MAIN})
 
-#add_executable(${PROJECT_NAME} ${PRJ_MAIN})
-
+# add_executable(${PROJECT_NAME} ${PRJ_MAIN})
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
@@ -42,5 +45,5 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${Stb_INCLUDE_DIR})
 find_package(fmt CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 
-#find_package(unofficial-sqlite3 CONFIG REQUIRED)
-#target_link_libraries(${PROJECT_NAME} PRIVATE unofficial::sqlite3::sqlite3)
+# find_package(unofficial-sqlite3 CONFIG REQUIRED)
+# target_link_libraries(${PROJECT_NAME} PRIVATE unofficial::sqlite3::sqlite3)
