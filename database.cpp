@@ -426,56 +426,58 @@ int main(int, char **) {
                     if (ImGui::BeginTabItem(name, &open,
                                             ImGuiTabItemFlags_None)) {
                         if (ImGui::BeginTable(
-                                fmt::format("Students of {}",
-                                            active_tabs[n])
-                                        .c_str(),
+                                fmt::format("Students of {}", active_tabs[n])
+                                    .c_str(),
                                 6,
-                                ImGuiTableFlags_RowBg |
-                                ImGuiTableFlags_Borders |
-                                ImGuiTableFlags_BordersH |
-                                ImGuiTableFlags_BordersOuterH |
-                                ImGuiTableFlags_BordersInnerH |
-                                ImGuiTableFlags_BordersV |
-                                ImGuiTableFlags_BordersOuterV |
-                                ImGuiTableFlags_BordersInnerV |
-                                ImGuiTableFlags_BordersOuter |
-                                ImGuiTableFlags_BordersInner)) {
-                            ImGui::TableNextRow();
+                                ImGuiTableFlags_Sortable |
+                                    ImGuiTableFlags_SortMulti |
+                                    ImGuiTableFlags_RowBg |
+                                    ImGuiTableFlags_Borders |
+                                    ImGuiTableFlags_BordersH |
+                                    ImGuiTableFlags_BordersOuterH |
+                                    ImGuiTableFlags_BordersInnerH |
+                                    ImGuiTableFlags_BordersV |
+                                    ImGuiTableFlags_BordersOuterV |
+                                    ImGuiTableFlags_BordersInnerV |
+                                    ImGuiTableFlags_BordersOuter |
+                                    ImGuiTableFlags_BordersInner)) {
                             ImGui::TableSetBgColor(
-                                    ImGuiTableBgTarget_RowBg0,
-                                    ImGui::GetColorU32(table_header_color));
-                            ImGui::TableNextColumn();
-                            ImGui::Text("Student ID");
-                            ImGui::TableNextColumn();
-                            ImGui::Text("First Name");
-                            ImGui::TableNextColumn();
-                            ImGui::Text("Last Name");
-                            ImGui::TableNextColumn();
-                            ImGui::Text("Grade");
-                            ImGui::TableNextColumn();
-                            ImGui::Text("Number of Lates");
-                            ImGui::TableNextColumn();
-                            ImGui::Text("Address");
-                            for (auto student:
-                                    db.getCourses()[active_tabs[n]]
-                                            .getStudents()) {
+                                ImGuiTableBgTarget_RowBg0,
+                                ImGui::GetColorU32(table_header_color));
+                            ImGui::TableSetupColumn(
+                                "Student ID", ImGuiTableColumnFlags_DefaultSort,
+                                0.0f);
+                            ImGui::TableSetupColumn("First Name", 0, 0.0f);
+                            ImGui::TableSetupColumn("Last Name", 0, 0.0f);
+                            ImGui::TableSetupColumn("Grade", 0, 0.0f);
+                            ImGui::TableSetupColumn(
+                                "Number of Lates",
+                                ImGuiTableColumnFlags_PreferSortDescending,
+                                0.0f);
+                            ImGui::TableSetupColumn(
+                                "Address", ImGuiTableColumnFlags_NoSort, 0.0f);
+
+                            ImGui::TableHeadersRow();
+                            ImGui::TableNextRow();
+                            for (auto student : db.getCourses()[active_tabs[n]]
+                                                    .getStudents()) {
                                 ImGui::TableNextColumn();
-                                ImGui::Text(
-                                        student->getStudentId().c_str());
+                                ImGui::Text(student->getStudentId().c_str());
                                 ImGui::TableNextColumn();
-                                ImGui::Text(
-                                        student->getFirstName().c_str());
+                                ImGui::Text(student->getFirstName().c_str());
                                 ImGui::TableNextColumn();
                                 ImGui::Text(student->getLastName().c_str());
                                 ImGui::TableNextColumn();
                                 ImGui::Text(
-                                        to_string(student->getGrade()).c_str());
+                                    to_string(student->getGrade()).c_str());
                                 ImGui::TableNextColumn();
                                 ImGui::Text(
-                                        to_string(student->getNumLates())
-                                                .c_str());
+                                    to_string(student->getNumLates()).c_str());
                                 ImGui::SameLine();
-                                if (ImGui::Button(fmt::format("+##{}", student->getStudentId()).c_str())){
+                                if (ImGui::Button(
+                                        fmt::format("+##{}",
+                                                    student->getStudentId())
+                                            .c_str())) {
                                     student->addLate();
                                 }
                                 ImGui::TableNextColumn();
@@ -485,16 +487,19 @@ int main(int, char **) {
                             if (ImGui::Button("Add Student to Course?")) {
                                 isAddingStudentToCourse = true;
                                 ImGui::SetNextWindowSize(ImVec2(400, 200));
-                                ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
+                                ImGui::SetNextWindowPos(center,
+                                                        ImGuiCond_Appearing,
                                                         ImVec2(0.5f, 0.5f));
                             }
                             if (isAddingStudentToCourse)
-                                addingStudentToCourse(active_tabs[n], isAddingStudentToCourse);
+                                addingStudentToCourse(active_tabs[n],
+                                                      isAddingStudentToCourse);
 
                             if (ImGui::Button("Create Student?")) {
                                 isCreatingStudent = true;
-                                ImGui::SetNextWindowSize(ImVec2(500, 300));
-                                ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
+                                ImGui::SetNextWindowSize(ImVec2(400, 200));
+                                ImGui::SetNextWindowPos(center,
+                                                        ImGuiCond_Appearing,
                                                         ImVec2(0.5f, 0.5f));
                             }
                             if (isCreatingStudent)
@@ -576,7 +581,7 @@ int main(int, char **) {
                         1000.0f / io.Framerate, io.Framerate);
             ImGui::End();
         } else {
-            ImGui::SetNextWindowSize(ImVec2(800, 400));
+            ImGui::SetNextWindowSize(ImVec2(400, 200));
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
                                     ImVec2(0.5f, 0.5f));
