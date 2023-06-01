@@ -1,17 +1,24 @@
 {
 	"Courses" : 
 	{
+		"ABC2O-01" : 
+		{
+			"Teacher" : "C69696"
+		},
 		"AMU4U-01" : 
 		{
+			"Students" : 
+			[
+				"S420420420",
+				"S987654321"
+			],
 			"Teacher" : "C69696"
 		},
 		"ICS4U-01" : 
 		{
 			"Students" : 
 			[
-				"S123456789",
-				"S696969696",
-				"S987654321"
+				"S696969696"
 			],
 			"Teacher" : "C69696"
 		},
@@ -28,24 +35,71 @@
 		{
 			"Students" : 
 			[
+				"S420420420",
+				"S123456780",
 				"S696969696"
+			],
+			"Teacher" : "C69696"
+		},
+		"SPH2O-01" : 
+		{
+			"Students" : 
+			[
+				"S124987867",
+				"S123456789",
+				"S987654321",
+				"S123456780"
 			],
 			"Teacher" : "C69696"
 		}
 	},
 	"Students" : 
 	{
+		"S123456780" : 
+		{
+			"Address" : "your dad",
+			"Courses" : 
+			[
+				"SCH4UE-01",
+				"SPH2O-01"
+			],
+			"First Name" : "hello",
+			"Grade" : 0,
+			"Last Name" : "your mom",
+			"Number of Lates" : 14
+		},
 		"S123456789" : 
 		{
 			"Address" : "",
 			"Courses" : 
 			[
-				"ICS4U-01",
-				"MPM4UE-01"
+				"MPM4UE-01",
+				"SPH2O-01"
 			],
 			"First Name" : "William",
 			"Grade" : 69,
 			"Last Name" : "Gao",
+			"Number of Lates" : 15
+		},
+		"S124987867" : 
+		{
+			"Address" : "your dad your mom",
+			"Courses" : 
+			[
+				"SPH2O-01"
+			],
+			"First Name" : "your mom",
+			"Grade" : 0,
+			"Last Name" : "your dada",
+			"Number of Lates" : 5
+		},
+		"S338638091" : 
+		{
+			"Address" : "LYH Drive",
+			"Courses" : [],
+			"First Name" : "LYH",
+			"Grade" : 99,
+			"Last Name" : "LYH",
 			"Number of Lates" : 0
 		},
 		"S420420420" : 
@@ -53,12 +107,14 @@
 			"Address" : "",
 			"Courses" : 
 			[
-				"MPM4UE-01"
+				"AMU4U-01",
+				"MPM4UE-01",
+				"SCH4UE-01"
 			],
 			"First Name" : "Rahul",
 			"Grade" : 5,
 			"Last Name" : "Vedula",
-			"Number of Lates" : 0
+			"Number of Lates" : 24
 		},
 		"S696969696" : 
 		{
@@ -71,19 +127,29 @@
 			"First Name" : "Jonathan",
 			"Grade" : 99,
 			"Last Name" : "Zhu",
-			"Number of Lates" : 0
+			"Number of Lates" : 2
+		},
+		"S918394802" : 
+		{
+			"Address" : "123 your mom street",
+			"Courses" : [],
+			"First Name" : "Matthew",
+			"Grade" : 69,
+			"Last Name" : "Fu",
+			"Number of Lates" : 3
 		},
 		"S987654321" : 
 		{
 			"Address" : "",
 			"Courses" : 
 			[
-				"ICS4U-01"
+				"AMU4U-01",
+				"SPH2O-01"
 			],
 			"First Name" : "Naman",
 			"Grade" : 100,
 			"Last Name" : "Biyani",
-			"Number of Lates" : 0
+			"Number of Lates" : 31
 		}
 	},
 	"Teachers" : 
@@ -96,6 +162,33 @@
 			"Last Name" : "",
 			"Password" : "yourmom",
 			"Teachables" : ""
+		},
+		"C12346" : 
+		{
+			"Address" : "123 Colonel By Road",
+			"Courses" : [],
+			"First Name" : "Evan ",
+			"Last Name" : "Liu",
+			"Password" : "5",
+			"Teachables" : "ENG4UE akfhajhfs"
+		},
+		"C12347" : 
+		{
+			"Address" : "FSLKJFSL",
+			"Courses" : [],
+			"First Name" : "LFKSJFLS",
+			"Last Name" : "FSKFJSLK",
+			"Password" : "123",
+			"Teachables" : "ENG4UE ICS4UE"
+		},
+		"C12348" : 
+		{
+			"Address" : "fsklfj",
+			"Courses" : [],
+			"First Name" : "fisj",
+			"Last Name" : "fklsjf",
+			"Password" : "123",
+			"Teachables" : "ENG4UE"
 		},
 		"C42042" : 
 		{
@@ -114,7 +207,9 @@
 			"Address" : "",
 			"Courses" : 
 			[
+				"ABC2O-01",
 				"AMU4U-01",
+				"SPH2O-01",
 				"ICS4U-01",
 				"SCH4UE-01"
 			],

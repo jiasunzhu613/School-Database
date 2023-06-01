@@ -384,7 +384,7 @@ int main(int, char **) {
                     // allow enter to use the button (additional feature)
                     ImGui::SameLine();
                     HelpMarker(
-                            "Only courses that haven't been created will be validated and allowed to be created. Valid course codes (e.g. MPM4UE, ICS4U, AVI2O) consist of 3 letters followed by a number course grade then a course difficulty).");
+                            "Valid course codes (e.g. MPM4UE, ICS4U, AVI2O) consist of 3 letters followed by a number course grade then a course difficulty. Class number will be added automatically at the end of each course code.");
 
                     if (!std::regex_match(buf1, course_match)) {
                         ImGui::Text("INVALID COURSE CODE");
@@ -493,7 +493,7 @@ int main(int, char **) {
 
                             if (ImGui::Button("Create Student?")) {
                                 isCreatingStudent = true;
-                                ImGui::SetNextWindowSize(ImVec2(400, 200));
+                                ImGui::SetNextWindowSize(ImVec2(500, 300));
                                 ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
                                                         ImVec2(0.5f, 0.5f));
                             }
@@ -576,7 +576,7 @@ int main(int, char **) {
                         1000.0f / io.Framerate, io.Framerate);
             ImGui::End();
         } else {
-            ImGui::SetNextWindowSize(ImVec2(400, 200));
+            ImGui::SetNextWindowSize(ImVec2(800, 400));
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
                                     ImVec2(0.5f, 0.5f));
