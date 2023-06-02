@@ -425,10 +425,7 @@ int main(int, char **) {
                              active_tabs[n].c_str());
                     if (ImGui::BeginTabItem(name, &open,
                                             ImGuiTabItemFlags_None)) {
-                        if (ImGui::BeginTable(
-                                fmt::format("Students of {}", active_tabs[n])
-                                    .c_str(),
-                                6,
+                        if (ImGui::BeginTable(fmt::format("Students of {}", active_tabs[n]).c_str(),6,
                                 ImGuiTableFlags_Sortable |
                                     ImGuiTableFlags_SortMulti |
                                     ImGuiTableFlags_RowBg |
@@ -444,18 +441,23 @@ int main(int, char **) {
                             ImGui::TableSetBgColor(
                                 ImGuiTableBgTarget_RowBg0,
                                 ImGui::GetColorU32(table_header_color));
-                            ImGui::TableSetupColumn(
-                                "Student ID", ImGuiTableColumnFlags_DefaultSort,
-                                0.0f);
-                            ImGui::TableSetupColumn("First Name", 0, 0.0f);
-                            ImGui::TableSetupColumn("Last Name", 0, 0.0f);
-                            ImGui::TableSetupColumn("Grade", 0, 0.0f);
-                            ImGui::TableSetupColumn(
-                                "Number of Lates",
-                                ImGuiTableColumnFlags_PreferSortDescending,
-                                0.0f);
-                            ImGui::TableSetupColumn(
-                                "Address", ImGuiTableColumnFlags_NoSort, 0.0f);
+                            ImGui::TableSetupColumn("Student ID", ImGuiTableColumnFlags_DefaultSort,0.0f, SORT_ID);
+                            ImGui::TableSetupColumn("First Name", 0, 0.0f, SORT_FirstName);
+                            ImGui::TableSetupColumn("Last Name", 0, 0.0f, SORT_LastName);
+                            ImGui::TableSetupColumn("Grade", 0, 0.0f, SORT_Grade);
+                            ImGui::TableSetupColumn("Number of Lates",ImGuiTableColumnFlags_PreferSortDescending,0.0f, SORT_NumLates);
+                            ImGui::TableSetupColumn("Address", ImGuiTableColumnFlags_NoSort, 0.0f);
+
+                            // Sort our data if sort specs have been changed!
+                            if (ImGuiTableSortSpecs* sorts_specs = ImGui::TableGetSortSpecs())
+                                if (sorts_specs->SpecsDirty)
+                                {
+                                    studentComparator::s_current_sort_specs{sorts_specs}; // Store in variable accessible by the sort function.
+                                    if (items.Size > 1)
+                                        qsort(&items[0], (size_t)items.Size, sizeof(items[0]), MyItem::CompareWithSortSpecs);
+                                    MyItem::s_current_sort_specs = NULL;
+                                    sorts_specs->SpecsDirty = false;
+                                }
 
                             ImGui::TableHeadersRow();
                             ImGui::TableNextRow();
