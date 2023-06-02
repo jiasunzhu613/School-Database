@@ -50,40 +50,74 @@ string Student::toString() {
     return ss.str();
 }
 
-static int idCompare(const Student s1, const Student s2) {
-    return s1.getStudentId().compare(s2.getStudentId());
+int Student::idCompare(const Student* s1, const Student* s2) {
+    return s1->getStudentId().compare(s2->getStudentId());
 }
-static int firstNameCompare(const Student s1, const Student s2) {
-    return s1.getFirstName().compare(s2.getFirstName());
+int Student::firstNameCompare(const Student* s1, const Student* s2) {
+    return s1->getFirstName().compare(s2->getFirstName());
 }
-static int lastNameCompare(const Student s1, const Student s2) {
-    return s1.getLastName().compare(s2.getLastName());
-}
-
-static int gradeCompare(const Student s1, const Student s2) {
-    if (s1.getGrade() > s2.getGrade()) return 1;
-    if (s1.getGrade() < s2.getGrade()) return -1;
-    return 0;
-}
-static int numLatesCompare(const Student s1, const Student s2) {
-    if (s1.getNumLates() > s2.getNumLates()) return 1;
-    if (s1.getNumLates() < s2.getNumLates()) return -1;
-    return 0;
+int Student::lastNameCompare(const Student* s1, const Student* s2) {
+    return s1->getLastName().compare(s2->getLastName());
 }
 
-static studentComparator CompareWithSortSpecs(student_sort_t sort_type) {
-    switch (sort_type) {
-        case SORT_ID:
-            return idCompare;
-        case SORT_FirstName:
-            return firstNameCompare;
-        case SORT_LastName:
-            return lastNameCompare;
-        case SORT_Grade:
-            return gradeCompare;
-        case SORT_NumLates:
-            return numLatesCompare;
-        default:
-            return nullptr;
+int Student::gradeCompare(const Student* s1, const Student* s2) {
+    if (s1->getGrade() > s2->getGrade()) return 1;
+    if (s1->getGrade() < s2->getGrade()) return -1;
+    return 0;
+}
+int Student::numLatesCompare(const Student* s1, const Student* s2) {
+    if (s1->getNumLates() > s2->getNumLates()) return 1;
+    if (s1->getNumLates() < s2->getNumLates()) return -1;
+    return 0;
+}
+
+studentComparator invert(studentComparator c) {
+    return [c](const Student* s1, const Student* s2) { return -1 * c(s1, s2); };
+}
+
+studentComparator comp(studentComparator c1, studentComparator c2) {
+    return [c1, c2](const Student* s1, const Student* s2) {
+        int x = c1(s1, s2);
+        if (x == 0)
+            return x;
+        else
+            return c2(s1, s2);
+    };
+}
+
+studentComparator Student::CompareWithSortSpecs(
+    ImGuiTableSortSpecs* sortSpecs) {
+    studentComparator s = [](const Student* s1, const Student* s2) {
+        return 0;
+    };
+
+    for (int i = 0; i < sortSpecs->SpecsCount; ++i) {
+        const ImGuiTableColumnSortSpecs* sort_spec = &sortSpecs->Specs[i];
+
+        studentComparator new_s = [](const Student* s1, const Student* s2) {
+            return 0;
+        };
+        switch (sort_spec->ColumnUserID) {
+            case SORT_ID:
+                new_s = idCompare;
+                break;
+            case SORT_FirstName:
+                new_s = firstNameCompare;
+                break;
+            case SORT_LastName:
+                new_s = lastNameCompare;
+                break;
+            case SORT_Grade:
+                new_s = gradeCompare;
+                break;
+            case SORT_NumLates:
+                new_s = numLatesCompare;
+                break;
+        }
+        if (sort_spec->SortDirection == ImGuiSortDirection_Descending)
+            new_s = invert(new_s);
+
+        s = comp(s, new_s);
     }
+    return s;
 }
