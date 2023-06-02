@@ -1,12 +1,14 @@
 #pragma once
 
+#include <functional>
 #include <sstream>
 #include <string>
 #include <unordered_set>
 
 #include "Course.hpp"
 #include "Person.hpp"
-using std::string, std::unordered_set;
+#include "imgui.h"
+using std::string, std::unordered_set, std::function;
 
 typedef enum {
     SORT_ID,
@@ -15,7 +17,8 @@ typedef enum {
     SORT_Grade,
     SORT_NumLates,
 } student_sort_t;
-typedef int (*studentComparator)(const Student, const Student);
+
+typedef std::function<int(const Student*, const Student*)> studentComparator;
 
 class Student : public Person {
    private:
@@ -41,10 +44,10 @@ class Student : public Person {
     const unordered_set<Course*>& getCourses();
     string toString();
 
-    static int idCompare(const Student, const Student);
-    static int firstNameCompare(const Student, const Student);
-    static int lastNameCompare(const Student, const Student);
-    static int gradeCompare(const Student, const Student);
-    static int numLatesCompare(const Student, const Student);
-    static studentComparator CompareWithSortSpecs(student_sort_t);
+    static int idCompare(const Student*, const Student*);
+    static int firstNameCompare(const Student*, const Student*);
+    static int lastNameCompare(const Student*, const Student*);
+    static int gradeCompare(const Student*, const Student*);
+    static int numLatesCompare(const Student*, const Student*);
+    static studentComparator CompareWithSortSpecs(ImGuiTableSortSpecs*);
 };

@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "SchoolDB.hpp"
+#include "Student.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -22,7 +23,7 @@
 #include "stb_image.h"
 
 using std::cout, std::cerr, std::cin, std::endl, std::unordered_set,
-    std::to_string, std::string, std::vector;
+    std::to_string, std::string, std::vector, std::sort;
 
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -71,15 +72,59 @@ bool valid_address_create = true;
 bool valid_grade_create = true;
 ImVec4 table_header_color = ImVec4(0.48f, 0.31f, 0.82f, 1.00f);
 
-// Student Table IDs
-enum StudentColumnID {
-    StudentColumnID_ID,
-    StudentColumnID_FirstName,
-    StudentColumnID_LastName,
-    StudentColumnID_Grade,
-    StudentColumnID_NumLates,
-    StudentColumnID_Address,
+struct StudentSorter {
+    vector<Student *> students;
+    static const ImGuiTableSortSpecs *s_current_sort_specs;
+
+    void init(Course &course, ImGuiTableSortSpecs *sort_specs) {
+        students.clear();
+        students.reserve(course.getStudents().size());
+        students.insert(students.begin(), course.getStudents().begin(),
+                        course.getStudents().end());
+
+        StudentSorter::s_current_sort_specs = sort_specs;
+        sort(students.begin(), students.end(), CompareWithSortSpecs);
+    }
+
+    static bool CompareWithSortSpecs(const Student *lhs, const Student *rhs) {
+        for (int n = 0; n < s_current_sort_specs->SpecsCount; ++n) {
+            const ImGuiTableColumnSortSpecs *sort_spec =
+                &StudentSorter::s_current_sort_specs->Specs[n];
+
+            int d = 0;
+
+            switch (sort_spec->ColumnUserID) {
+                case SORT_ID:
+                    d = Student::idCompare(lhs, rhs);
+                    break;
+                case SORT_FirstName:
+                    d = Student::firstNameCompare(lhs, rhs);
+                    break;
+                case SORT_LastName:
+                    d = Student::lastNameCompare(lhs, rhs);
+                    break;
+                case SORT_Grade:
+                    d = Student::gradeCompare(lhs, rhs);
+                    break;
+                case SORT_NumLates:
+                    d = Student::numLatesCompare(lhs, rhs);
+                    break;
+            }
+            if (d != 0)
+                return (d > 0) ^
+                       sort_spec->SortDirection == ImGuiSortDirection_Ascending;
+            /*
+            if (d != 0)
+                return d *
+                       (sort_spec->SortDirection == ImGuiSortDirection_Ascending
+                            ? 1
+                            : -1);
+            */
+        }
+        return Student::idCompare(lhs, rhs);
+    }
 };
+const ImGuiTableSortSpecs *StudentSorter::s_current_sort_specs = NULL;
 
 // Input filter
 struct TextFilters {
@@ -229,6 +274,10 @@ int main(int, char **) {
     bool showPW3 = false;
     bool show_log_in_window = true;
     bool show_logged_in_window = false;
+
+    StudentSorter sorterOfStudents;
+    StudentSorter::s_current_sort_specs = nullptr;
+
     //    bool first_use = true;
     //
     //    int my_image_width = 0;
@@ -465,21 +514,41 @@ int main(int, char **) {
                                 ImGui::GetColorU32(table_header_color));
                             ImGui::TableSetupColumn(
                                 "Student ID", ImGuiTableColumnFlags_DefaultSort,
-                                0.0f);
-                            ImGui::TableSetupColumn("First Name", 0, 0.0f);
-                            ImGui::TableSetupColumn("Last Name", 0, 0.0f);
-                            ImGui::TableSetupColumn("Grade", 0, 0.0f);
+                                0.0f, SORT_ID);
+                            ImGui::TableSetupColumn("First Name", 0, 0.0f,
+                                                    SORT_FirstName);
+                            ImGui::TableSetupColumn("Last Name", 0, 0.0f,
+                                                    SORT_LastName);
+                            ImGui::TableSetupColumn("Grade", 0, 0.0f,
+                                                    SORT_Grade);
                             ImGui::TableSetupColumn(
                                 "Number of Lates",
                                 ImGuiTableColumnFlags_PreferSortDescending,
-                                0.0f);
+                                0.0f, SORT_NumLates);
                             ImGui::TableSetupColumn(
                                 "Address", ImGuiTableColumnFlags_NoSort, 0.0f);
 
                             ImGui::TableHeadersRow();
+
+                            /**
+                             *
+                             * SORTING STUDENTS
+                             *
+                             *
+                             */
+
+                            if (ImGuiTableSortSpecs *sortSpecs =
+                                    ImGui::TableGetSortSpecs()) {
+                                string x = active_tabs[n];
+                                Course &course =
+                                    db.getCourses()[active_tabs[n]];
+                                if (sortSpecs->SpecsDirty) {
+                                    sorterOfStudents.init(course, sortSpecs);
+                                    sortSpecs->SpecsDirty = false;
+                                }
+                            }
                             ImGui::TableNextRow();
-                            for (auto student : db.getCourses()[active_tabs[n]]
-                                                    .getStudents()) {
+                            for (auto student : sorterOfStudents.students) {
                                 ImGui::TableNextColumn();
                                 ImGui::Text(student->getStudentId().c_str());
                                 ImGui::TableNextColumn();
