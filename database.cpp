@@ -54,6 +54,7 @@ SchoolDB db;
 std::regex course_match{"([A-Z]{3}([1-2]O|[1-4]C|[1-4]M|[1-4]UE|[1-4]U))"};
 std::regex teacher_match{"([A-Z]{1}\\d{5})"};
 std::regex student_match{"([A-Z]{1}\\d{9})"};
+
 // Teacher-related form submission validity
 bool valid_id = true;
 bool valid_pw = true;
@@ -72,6 +73,7 @@ bool valid_address_create = true;
 bool valid_grade_create = true;
 ImVec4 table_header_color = ImVec4(0.48f, 0.31f, 0.82f, 1.00f);
 
+//Student Table Sorter
 struct StudentSorter {
     vector<Student *> students;
     static const ImGuiTableSortSpecs *s_current_sort_specs;
@@ -113,13 +115,7 @@ struct StudentSorter {
             if (d != 0)
                 return (d > 0) ^
                        sort_spec->SortDirection == ImGuiSortDirection_Ascending;
-            /*
-            if (d != 0)
-                return d *
-                       (sort_spec->SortDirection == ImGuiSortDirection_Ascending
-                            ? 1
-                            : -1);
-            */
+
         }
         return Student::idCompare(lhs, rhs);
     }
@@ -232,39 +228,7 @@ int main(int, char **) {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    // Load Fonts
-    // - If no fonts are loaded, dear imgui will use the default font. You can
-    // also load multiple fonts and use ImGui::PushFont()/PopFont() to select
-    // them.
-    // - AddFontFromFileTTF() will return the ImFont* so you can store it if you
-    // need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return a nullptr.
-    // Please handle those errors in your application (e.g. use an assertion, or
-    // display an error and quit).
-    // - The fonts will be rasterized at a given size (w/ oversampling) and
-    // stored into a texture when calling
-    // ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame
-    // below will call.
-    // - Use '#define IMGUI_ENABLE_FREETYPE' in your imconfig file to use
-    // Freetype for higher quality font rendering.
-    // - Read 'docs/FONTS.md' for more instructions and details.
-    // - Remember that in C/C++ if you want to include a backslash \ in a string
-    // literal you need to write a double backslash \\ !
-    // - Our Emscripten build process allows embedding fonts to be accessible at
-    // runtime from the "fonts/" folder. See Makefile.emscripten for details.
-    // io.Fonts->AddFontDefault();
-    // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
-    // io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-    // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-    // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-    // ImFont* font =
-    // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
-    // nullptr, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != nullptr);
-
-    // Our state
-    //    bool show_demo_window = true;
-    //    bool show_another_window = false;
-    //    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    //States
     string logged_in_employee;
     int pwflags1 = ImGuiInputTextFlags_Password;
     bool showPW1 = false;
@@ -278,23 +242,6 @@ int main(int, char **) {
     StudentSorter sorterOfStudents;
     StudentSorter::s_current_sort_specs = nullptr;
 
-    //    bool first_use = true;
-    //
-    //    int my_image_width = 0;
-    //    int my_image_height = 0;
-    //    GLuint my_image_texture = 0;
-    //    bool ret = LoadTextureFromFile("../Images/plus_sign.png",
-    //    &my_image_texture,
-    //                                   &my_image_width, &my_image_height);
-    //    IM_ASSERT(ret);
-    //
-    //    int my_image_width2 = 0;
-    //    int my_image_height2 = 0;
-    //    GLuint my_image_texture2 = 0;
-    //    bool ret2 = LoadTextureFromFile("../Images/join.png",
-    //    &my_image_texture2,
-    //                                    &my_image_width2, &my_image_height2);
-    //    IM_ASSERT(ret2);
     bool isAddingStudentToCourse = false;
     bool isCreatingStudent = false;
     // Main loop
@@ -323,7 +270,7 @@ int main(int, char **) {
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();  // TODO: make frame have a minimum frame size
+        ImGui::NewFrame();
         if (!showPW1)
             pwflags1 = ImGuiInputTextFlags_Password;
         else
@@ -343,8 +290,7 @@ int main(int, char **) {
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
                                     ImVec2(0.5f, 0.5f));
-            // ImGuiWindowFlags_NoTitleBar
-            ImGui::Begin("##a", 0);
+            ImGui::Begin("##a", 0, ImGuiWindowFlags_NoTitleBar);
             static vector<std::string> active_tabs{};
             static int next_tab_id = 0;
             if (next_tab_id == 0) {
@@ -439,15 +385,12 @@ int main(int, char **) {
                                            &add_course_window)) {
                     ImGui::Text("COURSE ID");
 
-                    static char buf1[64] = "";
-                    ImGui::InputText("##a", buf1, 64,
+                    static char buf1[7] = "";
+                    ImGui::InputText("##a", buf1, 7,
                                      ImGuiInputTextFlags_EnterReturnsTrue |
                                          ImGuiInputTextFlags_CharsUppercase |
                                          ImGuiInputTextFlags_CallbackCharFilter,
                                      TextFilters::FilterCourseInput);
-                    // TODO: (might be too hard tbh) implement keyboard "enter"
-                    // key detection and allow enter to use the button
-                    // (additional feature)
                     ImGui::SameLine();
                     HelpMarker(
                         "Only courses that haven't been created will be "
@@ -479,6 +422,7 @@ int main(int, char **) {
                             db.addCourse(c);
                             active_tabs.push_back(
                                 fmt::format("{}-{:02}", output, count).c_str());
+                            for (char &c: buf1) c = '\0';
                             ImGui::CloseCurrentPopup();
                         }
                     }
@@ -537,15 +481,15 @@ int main(int, char **) {
                              *
                              */
 
-                            if (ImGuiTableSortSpecs *sortSpecs =
-                                    ImGui::TableGetSortSpecs()) {
+                            if (ImGuiTableSortSpecs *sortSpecs = ImGui::TableGetSortSpecs()) {
                                 string x = active_tabs[n];
-                                Course &course =
-                                    db.getCourses()[active_tabs[n]];
-                                if (sortSpecs->SpecsDirty) {
-                                    sorterOfStudents.init(course, sortSpecs);
-                                    sortSpecs->SpecsDirty = false;
-                                }
+                                Course &course =db.getCourses()[active_tabs[n]];
+                                sorterOfStudents.init(course, sortSpecs);
+//                                sortSpecs->SpecsDirty = false;
+//                                if (sortSpecs->SpecsDirty) {
+//                                    sorterOfStudents.init(course, sortSpecs);
+//                                    sortSpecs->SpecsDirty = false;
+//                                }
                             }
                             ImGui::TableNextRow();
                             for (auto student : sorterOfStudents.students) {
@@ -609,8 +553,6 @@ int main(int, char **) {
             }
             ImGui::End();
         }
-        // 2. Show a simple window that we create ourselves. We use a Begin/End
-        // pair to create a named window.
         else if (show_log_in_window) {
             static float f = 0.0f;
             static int counter = 0;
@@ -622,14 +564,14 @@ int main(int, char **) {
             // ImGuiWindowFlags_NoCollapse
             ImGui::Begin("Log in!", 0, ImGuiCond_FirstUseEver);
             ImGui::Text("Teacher ID");
-            static char buf1[64] = "";
+            static char buf1[7] = "";
             string IDLabel;
             if (valid_id)
                 IDLabel = "##a";
             else
                 IDLabel = "INVALID ID";
             ImGui::InputText(
-                IDLabel.c_str(), buf1, 64,
+                IDLabel.c_str(), buf1, 7,
                 ImGuiInputTextFlags_EnterReturnsTrue |
                     ImGuiInputTextFlags_CharsUppercase |
                     ImGuiInputTextFlags_CallbackCharFilter,
@@ -657,6 +599,8 @@ int main(int, char **) {
                         show_logged_in_window = true;
                         valid_id = true;
                         valid_pw = true;
+                        for (char &c: buf1) c = '\0';
+                        for (char &c: password) c = '\0';
                         break;
                     } else if (employeeID == buf1) {
                         valid_id = true;
@@ -667,6 +611,9 @@ int main(int, char **) {
             ImGui::Text("New Teacher?");
             ImGui::SameLine();
             if (ImGui::Button("Create Teacher ID")) {
+                for (char &c: buf1) c = '\0';
+                for (char &c: password) c = '\0';
+                showPW1 = false;
                 show_log_in_window = false;
             }
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
@@ -682,14 +629,14 @@ int main(int, char **) {
             ImGui::Begin("Sign Up!", 0,
                          ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoResize);
             ImGui::Text("Teacher ID");
-            static char id1[64] = "";
+            static char id1[7] = "";
             string IDLabel;
             if (valid_id_sign_up)
                 IDLabel = "##a";
             else
                 IDLabel = "INVALID ID";
             ImGui::InputText(
-                IDLabel.c_str(), id1, 64,
+                IDLabel.c_str(), id1, 7,
                 ImGuiInputTextFlags_EnterReturnsTrue |
                     ImGuiInputTextFlags_CharsUppercase |
                     ImGuiInputTextFlags_CallbackCharFilter,
@@ -818,9 +765,29 @@ int main(int, char **) {
                     "THROUGH THE LOG IN WINDOW!");
                 ImGui::EndPopup();
             }
-            if (!account_creation_success_window) show_log_in_window = true;
+            if (!account_creation_success_window){
+                for (char &c: id1) c = '\0';
+                for (char &c: fn1) c = '\0';
+                for (char &c: ln1) c = '\0';
+                for (char &c: address1) c = '\0';
+                for (char &c: teachables1) c = '\0';
+                for (char &c: password2) c = '\0';
+                for (char &c: password3) c = '\0';
+                showPW2 = false;
+                showPW3 = false;
+                show_log_in_window = true;
+            }
 
             if (ImGui::Button("Return To Log In Window")) {
+                for (char &c: id1) c = '\0';
+                for (char &c: fn1) c = '\0';
+                for (char &c: ln1) c = '\0';
+                for (char &c: address1) c = '\0';
+                for (char &c: teachables1) c = '\0';
+                for (char &c: password2) c = '\0';
+                for (char &c: password3) c = '\0';
+                showPW2 = false;
+                showPW3 = false;
                 show_log_in_window = true;
             }
 
@@ -902,6 +869,7 @@ static void glfw_error_callback(int error, const char *description) {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
+//Helper function to generate a help marker
 static void HelpMarker(const char *desc) {
     ImGui::TextDisabled("(?)");
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort) &&
@@ -913,18 +881,20 @@ static void HelpMarker(const char *desc) {
     }
 }
 
+//Open debug log window
 void log() {
     ImGui::Begin("Log");
     ImGui::Text(db.log(ImGui::Button("Update Logging?")).c_str());
     ImGui::End();
 }
 
-void addingStudentToCourse(string courseCode, bool &isCreatingStudent) {
+//Open add student to course pop-up modal
+void addingStudentToCourse(string courseCode, bool &isAddingStudent) {
     std::unordered_set<Student *> students =
         db.getCourses()[courseCode].getStudents();
     ImGui::OpenPopup("Adding Student to Course");
     if (ImGui::BeginPopupModal("Adding Student to Course",
-                               &isCreatingStudent)) {
+                               &isAddingStudent)) {
         ImGui::Text("FILTER BY: ");
         ImGui::SameLine();
         static char buf1[64] = "";
@@ -977,72 +947,38 @@ void addingStudentToCourse(string courseCode, bool &isCreatingStudent) {
         }
         if (!items.empty()) {
             if (ImGui::Button("ADD")) {
-                //                active_tabs.push_back(items[item_current_idx]);
-                //                next_tab_id++;
                 Student &studentBeingAdded =
                     db.getStudents().at(string{items[item_current_idx]});
 
                 db.getCourses()[courseCode].addStudentToClass(
                     &studentBeingAdded);
-                isCreatingStudent = false;
+                for (char &c: buf1) c = '\0';
+                isAddingStudent = false;
             }
         } else {
-            if (ImGui::Button("CLOSE")) isCreatingStudent = false;
+            if (ImGui::Button("CLOSE")){
+                for (char &c: buf1) c = '\0';
+                isAddingStudent = false;
+            }
         }
         ImGui::EndPopup();
     }
-    //    if (ImGui::BeginPopupModal("Adding Student to
-    //    Course",&isCreatingStudent)) {
-    //        const int buffSize = 11;
-    //        static char studentID[buffSize];
-    //        ImGui::InputText("Student ID", studentID, buffSize,
-    //        ImGuiInputTextFlags_EnterReturnsTrue
-    //        |ImGuiInputTextFlags_CharsUppercase
-    //        |ImGuiInputTextFlags_CallbackCharFilter,TextFilters::FilterStudentIDInput);
-    //        if (db.getStudents().contains(string{studentID})) {
-    //            if (ImGui::Button("Submit")) {
-    //                Student &studentBeingAdded =
-    //                        db.getStudents().at(string{studentID});
-    //
-    //                db.getCourses()[courseCode].addStudentToClass(
-    //                        &studentBeingAdded);
-    //
-    //                unordered_set x =
-    //                db.getCourses().at(courseCode).getStudents(); for (Student
-    //                *student:
-    //                        db.getCourses().at(courseCode).getStudents()) {
-    //                    cout << student->getFirstName() << " "
-    //                         << student->getLastName() << endl;
-    //                    cout << student->getStudentId() << endl;
-    //                }
-    //                isCreatingStudent = false;
-    //                for (char &c: studentID) c = '\0';
-    //            }
-    //        } else {
-    //            ImGui::Text("Student with this ID doesn't exist");
-    //            if (ImGui::Button("Quit?")) {
-    //                isCreatingStudent = false;
-    //                for (char &c: studentID) c = ' ';
-    //            }
-    //        }
-    //
-    //        ImGui::EndPopup();
-    //    }
 }
 
+//Open create student pop-up modal
 void creatingStudent(bool &isCreatingStudent) {
     ImGui::OpenPopup("Creating Student");
     if (ImGui::BeginPopupModal("Creating Student", &isCreatingStudent)) {
         // Student ID
         ImGui::Text("Student ID");
-        static char id1[64] = "";
+        static char id1[11] = "";
         string IDLabel;
         if (valid_id_create)
             IDLabel = "##a";
         else
             IDLabel = "INVALID ID";
         ImGui::InputText(
-            IDLabel.c_str(), id1, 64,
+            IDLabel.c_str(), id1, 11,
             ImGuiInputTextFlags_EnterReturnsTrue |
                 ImGuiInputTextFlags_CharsUppercase |
                 ImGuiInputTextFlags_CallbackCharFilter,
@@ -1117,6 +1053,11 @@ void creatingStudent(bool &isCreatingStudent) {
                     Student{fn1, ln1, address1, std::stoi(grade), id1});
                 db.save();
                 ImGui::OpenPopup("STUDENT CREATION SUCCESSFUL!");
+                for (char &c: id1) c = '\0';
+                for (char &c: fn1) c = '\0';
+                for (char &c: ln1) c = '\0';
+                for (char &c: address1) c = '\0';
+                for (char &c: grade) c = '\0';
                 isCreatingStudent = false;
             }
         }
@@ -1132,11 +1073,13 @@ void creatingStudent(bool &isCreatingStudent) {
     }
 }
 
+//Function to validate if a string is a valid teacher ID
 bool validateInputTeacherID(string in) {
     if (!std::regex_match(in, teacher_match)) return false;
     return db.getTeachers().find(in) == db.getTeachers().end();
 }
 
+//Function to validate if a string is a valid student ID
 bool validateInputStudentID(string in) {
     if (!std::regex_match(in, student_match)) return false;
     return db.getStudents().find(in) == db.getStudents().end();
