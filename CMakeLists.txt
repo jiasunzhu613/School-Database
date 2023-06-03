@@ -10,9 +10,8 @@ enable_testing()
 
 set(PRJ_HEADERS Person.hpp Student.hpp Teacher.hpp Course.hpp JSONBackend.hpp SchoolDB.hpp)
 set(PRJ_SOURCES Person.cpp Student.cpp Teacher.cpp Course.cpp JSONBackend.cpp SchoolDB.cpp)
-#set(PRJ_MAIN database.cpp)
-set(PRJ_MAIN main.cpp)
-#set(PRJ_MAIN jsonTester.cpp)
+set(PRJ_MAIN database.cpp)
+#set(PRJ_MAIN main.cpp)
 add_executable(${PROJECT_NAME} ${PRJ_HEADERS} ${PRJ_SOURCES} ${PRJ_MAIN})
 
 #add_executable(${PROJECT_NAME} ${PRJ_MAIN})
