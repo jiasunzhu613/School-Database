@@ -20,8 +20,6 @@ class Teacher : public Person {
     Teacher(string first, string last);
     Teacher(string f, string l, string t, string id, string pw);
     Teacher(string f, string l, string a, string t, string id, string pw);
-//    Teacher(const Teacher&);
-//    Teacher& operator=(const Teacher&);
     void setTeachables(string t);
     string getTeachables();
     void setEmployeeId(string id);
