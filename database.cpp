@@ -393,15 +393,15 @@ int main(int, char **) {
                                      TextFilters::FilterCourseInput);
                     ImGui::SameLine();
                     HelpMarker(
-                        "Only courses that haven't been created will be "
+                        "Only courses that haven't been created and are teachable will be "
                         "validated and allowed to be created. Valid course "
                         "codes (e.g. MPM4UE, ICS4U, AVI2O) consist of 3 "
                         "letters followed by a number course grade then a "
                         "course difficulty).");
-
-                    if (!std::regex_match(buf1, course_match)) {
-                        ImGui::Text("INVALID COURSE CODE");
-                    } else {
+                    bool inTeachables = db.getTeachers()[logged_in_employee].getTeachables().find(buf1) != std::string::npos;
+                    if (!std::regex_match(buf1, course_match) or !inTeachables) {
+                        ImGui::Text("INVALID COURSE CODE OR COURSE CODE NOT IN TEACHABLES");
+                    }else {
                         if (ImGui::Button("CREATE")) {
                             int count = 1;
                             for (auto [courseCode, course] : db.getCourses()) {
