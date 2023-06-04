@@ -1,127 +1,76 @@
 {
 	"Courses" : 
 	{
-		"AMU4U-01" : 
+		"ICS3U-01" : 
 		{
-			"Teacher" : "C69696"
+			"Students" : 
+			[
+				"S123456789"
+			],
+			"Teacher" : "C12345"
 		},
 		"ICS4U-01" : 
 		{
 			"Students" : 
 			[
-				"S123456789",
-				"S696969696",
-				"S987654321"
+				"S123456789"
 			],
-			"Teacher" : "C69696"
+			"Teacher" : "C12345"
 		},
-		"MPM4UE-01" : 
+		"MPM2O-01" : 
 		{
 			"Students" : 
 			[
-				"S123456789",
-				"S420420420"
+				"S123456780",
+				"S123456789"
 			],
-			"Teacher" : "C42042"
-		},
-		"SCH4UE-01" : 
-		{
-			"Students" : 
-			[
-				"S696969696"
-			],
-			"Teacher" : "C69696"
+			"Teacher" : "C12345"
 		}
 	},
 	"Students" : 
 	{
-		"S123456789" : 
+		"S123456780" : 
 		{
-			"Address" : "",
+			"Address" : "124 Sesame Street",
 			"Courses" : 
 			[
-				"MPM4UE-01",
-				"ICS4U-01"
-			],
-			"First Name" : "William",
-			"Grade" : 69,
-			"Last Name" : "Gao",
-			"Number of Lates" : 0
-		},
-		"S420420420" : 
-		{
-			"Address" : "",
-			"Courses" : 
-			[
-				"MPM4UE-01"
-			],
-			"First Name" : "Rahul",
-			"Grade" : 5,
-			"Last Name" : "Vedula",
-			"Number of Lates" : 0
-		},
-		"S696969696" : 
-		{
-			"Address" : "",
-			"Courses" : 
-			[
-				"SCH4UE-01",
-				"ICS4U-01"
+				"MPM2O-01"
 			],
 			"First Name" : "Jonathan",
-			"Grade" : 99,
+			"Grade" : 100,
 			"Last Name" : "Zhu",
-			"Number of Lates" : 6
+			"Number of Lates" : 1
 		},
-		"S987654321" : 
+		"S123456789" : 
 		{
-			"Address" : "",
+			"Address" : "123 Sesame Street",
 			"Courses" : 
 			[
-				"ICS4U-01"
+				"ICS4U-01",
+				"MPM2O-01",
+				"ICS3U-01"
 			],
-			"First Name" : "Naman",
+			"First Name" : "Nirdev",
 			"Grade" : 100,
-			"Last Name" : "Biyani",
-			"Number of Lates" : 4
+			"Last Name" : "Paul",
+			"Number of Lates" : 0
 		}
 	},
 	"Teachers" : 
 	{
 		"C12345" : 
 		{
-			"Address" : "",
-			"Courses" : [],
-			"First Name" : "",
-			"Last Name" : "",
-			"Password" : "yourmom",
-			"Teachables" : ""
-		},
-		"C42042" : 
-		{
-			"Address" : "",
+			"Address" : "2381 Ogilvie Rd",
 			"Courses" : 
 			[
-				"MPM4UE-01"
-			],
-			"First Name" : "Andy",
-			"Last Name" : "Hughes",
-			"Password" : "goat",
-			"Teachables" : "MPM4UE"
-		},
-		"C69696" : 
-		{
-			"Address" : "",
-			"Courses" : 
-			[
-				"SCH4UE-01",
+				"ICS3U-01",
 				"ICS4U-01",
-				"AMU4U-01"
+				"MPM2O-01"
 			],
 			"First Name" : "Benjamin",
 			"Last Name" : "Hudson",
 			"Password" : "1",
-			"Teachables" : "ICS4U"
+			"Teachables" : "ICS4U ICS3U MPM2O MPM3U MPM4U"
 		}
 	}
 }
