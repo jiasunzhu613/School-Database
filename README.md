@@ -1,5 +1,5 @@
 # School Database
-A school database created using C++ that manages students, teachers, and classes.
+🏫 A school database created using C++ that manages students, teachers, and classes.
 
 ## Tools Used:
 - vcpkg open source package manager
